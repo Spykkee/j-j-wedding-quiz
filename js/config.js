@@ -1,26 +1,27 @@
 /* ---------------------------------------------------------------------------
    J&J Quiz — configuration.
 
-   Fill in FIREBASE once (Firebase console > Project settings > Your apps > Web).
-   Everything else has a sensible default.
+   These values belong to the Firebase project 'jj-wedding-quiz' (europe-west1).
+   They are not secrets: every Firebase web app ships them to the browser. What
+   actually protects the data is firebase-rules.json, which only lets the admin
+   UID touch the quiz and the game state.
 
-   Until FIREBASE.apiKey is filled in, the app runs in OFFLINE mode: everything
-   works on a single device (across browser tabs) so you can build the quiz and
-   rehearse the whole evening without a network. Nothing is lost when you switch
-   to Firebase later — the quiz exports/imports as JSON.
+   Add ?offline=1 to any URL to ignore Firebase and run offline rehearsal mode
+   instead — everything works on one device, across browser tabs.
    --------------------------------------------------------------------------- */
 
 export const FIREBASE = {
-  apiKey: '',
-  authDomain: '',
-  databaseURL: '',
-  projectId: '',
-  appId: ''
+  apiKey: 'AIzaSyDwfclCjARJ47hA7egEpwKCXRz-Fe7xRec',
+  authDomain: 'jj-wedding-quiz.firebaseapp.com',
+  databaseURL: 'https://jj-wedding-quiz-default-rtdb.europe-west1.firebasedatabase.app',
+  projectId: 'jj-wedding-quiz',
+  appId: '1:457639788499:web:4083eba631997833b0f926'
 };
 
-/* The email of the Firebase user allowed to edit the quiz and drive the game.
-   Create it in Firebase console > Authentication > Users > Add user.
-   This same address goes into firebase-rules.json. */
+/* Optional: prefills the email box on the admin sign-in screen. Left empty on
+   purpose so a public repo carries no personal address — type it at sign-in, or
+   fill it in if you would rather not. The rules never read this; they check the
+   admin's UID. */
 export const ADMIN_EMAIL = '';
 
 /* One room per evening. Change it if you want a clean slate while keeping the

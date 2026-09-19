@@ -1,0 +1,90 @@
+{
+  // Realtime Database rules for the J&J wedding quiz.
+  // Deploy with:  firebase deploy --only database
+  //
+  // 'admin' below is the UID of the Email/Password user in this project
+  // (Authentication > Users). A UID rather than an email address, so this file
+  // can live in a public repo without carrying a personal address. If you ever
+  // recreate that account its UID changes and you must update it here.
+  //
+  // What these rules guarantee:
+  //   - the full quiz, answers included, is readable only by the admin
+  //   - guests read only 'pub', the copy with every answer stripped out
+  //   - a guest can write their own team record and their own answer, nothing else
+  //   - a guest cannot write pts or state, so no phone can award itself points
+  //   - answers are only accepted while a question is actually open
+  //
+  // Knowingly accepted: answers are world-readable, because the big screen is
+  // not signed in and has to show who got it right.
+
+  "rules": {
+    "rooms": {
+      "$room": {
+
+        "quiz": {
+          ".read": "auth != null && auth.uid === 'nVysUWEmeiRNEPmUqD0KUnnR31T2'",
+          ".write": "auth != null && auth.uid === 'nVysUWEmeiRNEPmUqD0KUnnR31T2'"
+        },
+
+        "pub": {
+          ".read": true,
+          ".write": "auth != null && auth.uid === 'nVysUWEmeiRNEPmUqD0KUnnR31T2'"
+        },
+
+        "state": {
+          ".read": true,
+          ".write": "auth != null && auth.uid === 'nVysUWEmeiRNEPmUqD0KUnnR31T2'"
+        },
+
+        "adjust": {
+          ".read": true,
+          ".write": "auth != null && auth.uid === 'nVysUWEmeiRNEPmUqD0KUnnR31T2'"
+        },
+
+        "teams": {
+          ".read": true,
+          // Collection-level write is the admin only: it is what lets the
+          // Tables pane remove every table at once. Guests are handled by the
+          // per-team rule below, which never grants them the whole node.
+          ".write": "auth != null && auth.uid === 'nVysUWEmeiRNEPmUqD0KUnnR31T2'",
+          "$uid": {
+            ".write": "auth != null && (auth.uid === $uid || auth.uid === 'nVysUWEmeiRNEPmUqD0KUnnR31T2')",
+            "name": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 26"
+            },
+            "at": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        },
+
+        "answers": {
+          ".read": true,
+          // Same again: the admin can wipe the answers between the rehearsal
+          // and the real thing. Guests only ever reach their own leaf.
+          ".write": "auth != null && auth.uid === 'nVysUWEmeiRNEPmUqD0KUnnR31T2'",
+          "$qkey": {
+            "$uid": {
+              ".write": "auth != null && (auth.uid === $uid || auth.uid === 'nVysUWEmeiRNEPmUqD0KUnnR31T2')",
+              "value": {
+                ".validate": "newData.isString() && newData.val().length <= 200 && (auth.uid === 'nVysUWEmeiRNEPmUqD0KUnnR31T2' || root.child('rooms/' + $room + '/state/open').val() === true)"
+              },
+              "at": { ".validate": "newData.isNumber()" },
+              "name": { ".validate": "newData.isString() && newData.val().length <= 26" },
+              "pts": {
+                ".validate": "auth.uid === 'nVysUWEmeiRNEPmUqD0KUnnR31T2' && newData.isNumber()"
+              },
+              "state": {
+                ".validate": "auth.uid === 'nVysUWEmeiRNEPmUqD0KUnnR31T2' && newData.isString() && newData.val().length <= 12"
+              },
+              "manual": {
+                ".validate": "auth.uid === 'nVysUWEmeiRNEPmUqD0KUnnR31T2' && newData.isBoolean()"
+              },
+              "$other": { ".validate": false }
+            }
+          }
+        }
+
+      }
+    }
+  }
+}

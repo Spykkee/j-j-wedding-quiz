@@ -42,47 +42,44 @@ rehearsal only: guests on their own phones need the Firebase setup below.
 
 ---
 
-## Setting up Firebase (about ten minutes)
+## Firebase — already set up
 
-1. **Create a project** at <https://console.firebase.google.com>. The free
-   Spark plan is far more than enough for one dinner.
+The project is live; [`js/config.js`](js/config.js) is filled in and the rules
+are deployed. Nothing here needs doing again.
 
-2. **Create a Realtime Database** (not Firestore): Build → Realtime Database →
-   Create database. Pick the region nearest the venue and start in *locked mode*
-   — the rules below replace whatever it starts with.
+| | |
+| --- | --- |
+| Project | `jj-wedding-quiz` ([console](https://console.firebase.google.com/project/jj-wedding-quiz/overview)) |
+| Owner | aerojim92@gmail.com |
+| Realtime Database | `jj-wedding-quiz-default-rtdb`, europe-west1 |
+| Plan | Spark (free) — 100 simultaneous connections |
+| Sign-in methods | Anonymous (guests) + Email/Password (admin) |
+| Admin account | aerojim92@gmail.com — password in your password manager |
+| Admin UID | `nVysUWEmeiRNEPmUqD0KUnnR31T2` (what the rules check) |
+| Authorized domains | `localhost`, `spykkee.github.io`, `*.firebaseapp.com`, `*.web.app` |
 
-3. **Turn on two sign-in methods**: Build → Authentication → Sign-in method →
-   enable **Anonymous** (this is how guests join without a login) and
-   **Email/Password** (this is how you sign in to the admin).
+`spykkee.github.io` is already authorized, so publishing this repo to GitHub
+Pages works with no further Firebase changes.
 
-4. **Create your admin user**: Authentication → Users → Add user. Use any email
-   and a password you will remember. Nobody ever emails this address.
+**Changing the rules:** edit [`database.rules.json`](database.rules.json), then
 
-5. **Register a web app**: Project settings → Your apps → Web (`</>`). Copy the
-   `firebaseConfig` values into [`js/config.js`](js/config.js), and put the admin
-   email in `ADMIN_EMAIL`:
+```sh
+firebase deploy --only database
+JJQ_ADMIN_PW="your-admin-password" node tests/live-rules.mjs
+```
 
-   ```js
-   export const FIREBASE = {
-     apiKey: 'AIza…',
-     authDomain: 'your-project.firebaseapp.com',
-     databaseURL: 'https://your-project-default-rtdb.europe-west1.firebasedatabase.app',
-     projectId: 'your-project',
-     appId: '1:…:web:…'
-   };
-   export const ADMIN_EMAIL = 'you@example.com';
-   ```
+The second command re-proves every boundary against the live database and
+cleans up after itself.
 
-   These values are not secrets — they ship in every Firebase web app. The rules
-   in the next step are what actually protects the data.
+**If you ever recreate the admin account** its UID changes, and the rules stop
+letting you in. Get the new one from Authentication → Users and replace all
+occurrences in `database.rules.json`, then redeploy.
 
-6. **Publish the rules**: open [`firebase-rules.json`](firebase-rules.json),
-   replace every `ADMIN_EMAIL_HERE` with the same email, and paste the file into
-   Realtime Database → Rules → Publish.
-
-7. **Host the pages**: GitHub Pages works, same as the other two wedding sites.
-   Firebase will refuse connections from an unknown domain until you add it under
-   Authentication → Settings → Authorized domains.
+**Capacity.** Spark allows 100 simultaneous database connections. One phone per
+table plus the big screen and the admin is comfortably inside that. If it looks
+like every guest will join individually, watch the live count under Realtime
+Database → Usage; going over means those extra phones silently fail to connect,
+and the fix is upgrading to Blaze (still pennies for one evening).
 
 ---
 
@@ -175,12 +172,18 @@ js/
   admin.js      auth, tabs, publishing
   admin-build.js
   admin-run.js  running the game, judging, tables
-firebase-rules.json
+database.rules.json   deployed security rules (gated on the admin UID)
+firebase.json         deploy config       .firebaserc  project id
 samples/sample-quiz.json
-tests/          open these in a browser; they print pass/fail
+tests/          game.html + guest.html open in a browser; live-rules.mjs is node
 ```
 
 `tests/game.html` plays a whole quiz through the real admin code — joining,
 answering, auto-grading, hand-judging, scores. `tests/guest.html` does the same
 for the guest page. Serve the folder and open them; every line should start with
-`ok`.
+`ok`. Both run offline and touch nothing real.
+
+`tests/live-rules.mjs` is different: it runs under node against the **live**
+database and checks the security boundaries actually hold — that a guest cannot
+read the answers, write another table's record, award itself points, or drive
+the game. Run it after any rules change.
