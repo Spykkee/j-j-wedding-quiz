@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>e2e guest</title></head>
+<body>
+<!-- same hooks index.html gives play.js -->
+<main id="app" class="stack"></main>
+<div id="standing" class="standing hidden">
+  <div><div class="standing__label"></div><div id="standing-team" class="fine"></div></div>
+  <div><div id="standing-score" class="standing__score tnum">0</div>
+  <div id="standing-place" class="standing__label"></div></div>
+</div>
+<pre id="out"></pre>
+<script type="module">
+import { openStore } from '../js/store.js';
+import { normaliseQuiz } from '../js/model.js';
+
+const out = document.getElementById('out');
+let fails = 0;
+const log = (s) => { out.textContent += s + '\n'; };
+function ok(label, cond, extra) {
+  if (cond) log('ok   ' + label);
+  else { fails++; log('FAIL ' + label + (extra ? ' :: ' + extra : '')); }
+}
+const settle = () => new Promise((r) => setTimeout(r, 60));
+
+try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+
+try {
+const store = openStore();
+const me = await store.signInGuest();
+
+const quiz = normaliseQuiz({
+  title: { en: 'Test quiz' },
+  rounds: [{ title: { en: 'Round one' }, questions: [
+    { type: 'mc', prompt: { en: 'Which wind blows through Provence?' }, points: 2, time: 0,
+      options: [ { id: 'oa', text: { en: 'Sirocco' } }, { id: 'ob', text: { en: 'Mistral' } } ],
+      correct: 'ob' },
+    { type: 'exact', prompt: { en: 'Name the river' }, points: 3, time: 0, accept: ['Rhone'] }
+  ] }]
+});
+
+/* publish the guest-facing projection only, exactly as admin.js does */
+await store.write('pub', {
+  title: quiz.title,
+  rounds: quiz.rounds.map((r) => ({
+    id: r.id, title: r.title, blurb: r.blurb,
+    questions: r.questions.map((q) => {
+      const o = { id: q.id, type: q.type, prompt: q.prompt, image: '', points: q.points, time: q.time };
+      if (q.type === 'mc') o.options = q.options.map((x) => ({ id: x.id, text: x.text }));
+      return o;
+    })
+  }))
+});
+await store.write('teams/' + me, { name: 'Alpha', at: 1 });
+await store.write('teams/other', { name: 'Bravo', at: 2 });
+await store.write('state', { phase: 'question', r: 0, q: 0, open: true });
+
+await import('../js/play.js');
+await settle();
+
+const app = document.getElementById('app');
+ok('question prompt shown', /Which wind blows/.test(app.textContent), app.textContent.slice(0, 90));
+ok('options rendered', app.querySelectorAll('.option').length === 2,
+   app.querySelectorAll('.option').length);
+ok('points badge shown', /2 pts/.test(app.textContent));
+ok('round name shown', /Round one/.test(app.textContent));
+
+/* the published projection must not leak the answer anywhere in the page */
+const pub = await store.read('pub');
+ok('no correct answer in the published quiz', JSON.stringify(pub).indexOf('correct') === -1);
+
+/* tap the right option */
+app.querySelector('.option[data-opt="ob"]').click();
+await settle();
+const written = await store.read('answers/0-0/' + me);
+ok('answer written', written && written.value === 'ob', JSON.stringify(written));
+ok('guest cannot write its own points', written && written.pts === undefined &&
+   written.state === undefined, JSON.stringify(written));
+
+/* admin grades and reveals */
+await store.merge('answers/0-0/' + me, { state: 'correct', pts: 2 });
+await store.write('state', { phase: 'reveal', r: 0, q: 0, open: false,
+  reveal: { kind: 'mc', optionId: 'ob', text: 'Mistral' } });
+await settle();
+ok('correct verdict shown', /Correct!/.test(app.textContent), app.textContent.slice(0, 120));
+ok('answer revealed', /Mistral/.test(app.textContent));
+ok('right option highlighted', !!app.querySelector('.option.is-right'));
+
+/* standing bar reflects the score */
+ok('standing bar visible', !document.getElementById('standing').classList.contains('hidden'));
+ok('standing shows 2', document.getElementById('standing-score').textContent === '2',
+   document.getElementById('standing-score').textContent);
+
+/* a text question accepts typing */
+await store.write('state', { phase: 'question', r: 0, q: 1, open: true });
+await settle();
+const input = app.querySelector('#answer');
+ok('text input rendered', !!input);
+input.value = 'Rhone';
+app.querySelector('#send').click();
+await settle();
+const a2 = await store.read('answers/0-1/' + me);
+ok('typed answer written', a2 && a2.value === 'Rhone', JSON.stringify(a2));
+
+/* closed question disables input */
+await store.write('state', { phase: 'question', r: 0, q: 1, open: false });
+await settle();
+ok('input disabled when closed', app.querySelector('#answer').disabled === true);
+ok('closed notice shown', /Answers are closed/.test(app.textContent));
+
+/* scores screen lists both tables */
+await store.write('state', { phase: 'scores', r: 0, q: 1, open: false, scope: 'final' });
+await settle();
+ok('scores list both teams', /Alpha/.test(app.textContent) && /Bravo/.test(app.textContent));
+
+/* a fresh guest with no team gets the join form */
+await store.erase('teams/' + me);
+await settle();
+ok('join form returns when the team is gone', !!app.querySelector('#name'),
+   app.textContent.slice(0, 80));
+
+log(fails ? '\nRESULT: ' + fails + ' FAILURES' : '\nRESULT: all guest checks passed');
+} catch (err) {
+  log('\nRESULT: THREW ' + (err && err.stack ? err.stack : err));
+}
+</script>
+</body></html>

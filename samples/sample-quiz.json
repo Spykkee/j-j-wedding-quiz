@@ -1,0 +1,178 @@
+{
+  "title": {
+    "en": "The J & J Quiz",
+    "fr": "Le Quiz de J & J",
+    "ko": "J & J 퀴즈"
+  },
+  "rounds": [
+    {
+      "id": "r_sample1",
+      "title": { "en": "How well do you know us?", "fr": "Nous connaissez-vous vraiment ?", "ko": "우리를 얼마나 아시나요?" },
+      "blurb": {
+        "en": "Three questions about the two people who dragged you all the way to Provence.",
+        "fr": "Trois questions sur les deux personnes qui vous ont traînés jusqu’en Provence.",
+        "ko": "여러분을 프로방스까지 오게 만든 두 사람에 대한 세 문제."
+      },
+      "questions": [
+        {
+          "id": "q_s1a",
+          "type": "mc",
+          "prompt": {
+            "en": "Where did we meet for the very first time?",
+            "fr": "Où nous sommes-nous rencontrés pour la toute première fois ?",
+            "ko": "우리가 처음 만난 곳은 어디일까요?"
+          },
+          "image": "",
+          "points": 1,
+          "time": 30,
+          "options": [
+            { "id": "o_s1a1", "text": { "en": "At a friend's birthday", "fr": "À l’anniversaire d’un ami", "ko": "친구 생일 파티에서" } },
+            { "id": "o_s1a2", "text": { "en": "At work", "fr": "Au travail", "ko": "직장에서" } },
+            { "id": "o_s1a3", "text": { "en": "On a plane", "fr": "Dans un avion", "ko": "비행기 안에서" } },
+            { "id": "o_s1a4", "text": { "en": "In a queue for coffee", "fr": "Dans la file d’attente d’un café", "ko": "카페 줄에서" } }
+          ],
+          "correct": "o_s1a1"
+        },
+        {
+          "id": "q_s1b",
+          "type": "mc",
+          "prompt": {
+            "en": "Which of these has one of us genuinely done?",
+            "fr": "Laquelle de ces choses l’un de nous a-t-il vraiment faite ?",
+            "ko": "다음 중 우리 둘 중 한 명이 실제로 한 일은?"
+          },
+          "image": "",
+          "points": 2,
+          "time": 40,
+          "options": [
+            { "id": "o_s1b1", "text": { "en": "Missed a flight while asleep at the gate", "fr": "Raté un vol en dormant à la porte d’embarquement", "ko": "게이트에서 잠들어 비행기를 놓쳤다" } },
+            { "id": "o_s1b2", "text": { "en": "Been on national television", "fr": "Passé à la télévision nationale", "ko": "전국 방송에 나온 적이 있다" } },
+            { "id": "o_s1b3", "text": { "en": "Broken a bone dancing", "fr": "Cassé un os en dansant", "ko": "춤추다 뼈가 부러졌다" } }
+          ],
+          "correct": "o_s1b2"
+        },
+        {
+          "id": "q_s1c",
+          "type": "exact",
+          "prompt": {
+            "en": "In which city did we say yes to each other?",
+            "fr": "Dans quelle ville nous sommes-nous dit oui ?",
+            "ko": "우리가 서로에게 예스라고 말한 도시는?"
+          },
+          "image": "",
+          "points": 2,
+          "time": 45,
+          "accept": ["Paris"],
+          "fuzzy": true
+        }
+      ]
+    },
+    {
+      "id": "r_sample2",
+      "title": { "en": "Provence & the weekend", "fr": "La Provence et le week-end", "ko": "프로방스와 이번 주말" },
+      "blurb": {
+        "en": "You have been here two days. Were you paying attention?",
+        "fr": "Vous êtes là depuis deux jours. Étiez-vous attentifs ?",
+        "ko": "이틀째 여기 계셨죠. 잘 보고 계셨나요?"
+      },
+      "questions": [
+        {
+          "id": "q_s2a",
+          "type": "exact",
+          "prompt": {
+            "en": "Which village are we in this weekend?",
+            "fr": "Dans quel village sommes-nous ce week-end ?",
+            "ko": "이번 주말 우리가 머무는 마을은?"
+          },
+          "image": "",
+          "points": 1,
+          "time": 30,
+          "accept": ["Rochefort-du-Gard", "Rochefort du Gard", "Rochefort"],
+          "fuzzy": true
+        },
+        {
+          "id": "q_s2b",
+          "type": "mc",
+          "prompt": {
+            "en": "What is the famous wind that blows through Provence?",
+            "fr": "Quel est le vent célèbre qui souffle en Provence ?",
+            "ko": "프로방스에 부는 유명한 바람의 이름은?"
+          },
+          "image": "",
+          "points": 1,
+          "time": 25,
+          "options": [
+            { "id": "o_s2b1", "text": { "en": "The Sirocco", "fr": "Le Sirocco", "ko": "시로코" } },
+            { "id": "o_s2b2", "text": { "en": "The Mistral", "fr": "Le Mistral", "ko": "미스트랄" } },
+            { "id": "o_s2b3", "text": { "en": "The Tramontane", "fr": "La Tramontane", "ko": "트라몬타나" } }
+          ],
+          "correct": "o_s2b2"
+        },
+        {
+          "id": "q_s2c",
+          "type": "exact",
+          "prompt": {
+            "en": "Which river runs past Avignon?",
+            "fr": "Quel fleuve passe par Avignon ?",
+            "ko": "아비뇽을 지나는 강의 이름은?"
+          },
+          "image": "",
+          "points": 2,
+          "time": 35,
+          "accept": ["Rhône", "Rhone"],
+          "fuzzy": true
+        }
+      ]
+    },
+    {
+      "id": "r_sample3",
+      "title": { "en": "Over to you", "fr": "À vous de jouer", "ko": "이제 여러분 차례" },
+      "blurb": {
+        "en": "No right answers here — just the ones that make us laugh hardest.",
+        "fr": "Pas de bonne réponse ici — seulement celles qui nous feront le plus rire.",
+        "ko": "정답은 없어요 — 우리를 가장 웃게 하는 답이 이깁니다."
+      },
+      "questions": [
+        {
+          "id": "q_s3a",
+          "type": "free",
+          "prompt": {
+            "en": "Give us one piece of marriage advice. Best one wins the points.",
+            "fr": "Donnez-nous un conseil de mariage. Le meilleur remporte les points.",
+            "ko": "결혼 생활 조언을 하나 남겨 주세요. 가장 좋은 답이 점수를 가져갑니다."
+          },
+          "image": "",
+          "points": 3,
+          "time": 90,
+          "note": "3 points for anything that makes us both laugh, 1 for a sweet one, 0 for 'happy wife happy life'"
+        },
+        {
+          "id": "q_s3b",
+          "type": "free",
+          "prompt": {
+            "en": "What will we argue about first on the honeymoon?",
+            "fr": "À propos de quoi allons-nous nous disputer en premier pendant la lune de miel ?",
+            "ko": "신혼여행에서 우리가 가장 먼저 다툴 일은 무엇일까요?"
+          },
+          "image": "",
+          "points": 3,
+          "time": 75,
+          "note": "Full points for anything about directions or packing"
+        },
+        {
+          "id": "q_s3c",
+          "type": "free",
+          "prompt": {
+            "en": "Name a song we absolutely have to play tonight.",
+            "fr": "Citez une chanson qu’il faut absolument passer ce soir.",
+            "ko": "오늘 밤 꼭 틀어야 할 노래 하나를 적어 주세요."
+          },
+          "image": "",
+          "points": 2,
+          "time": 60,
+          "note": "2 points if it is already on the playlist, 1 if we add it on the spot"
+        }
+      ]
+    }
+  ]
+}

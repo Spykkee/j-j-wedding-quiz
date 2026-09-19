@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#35191F">
+  <title data-i18n="doc.host">J&amp;J Wedding Quiz — Big Screen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Jost:wght@300;400;500&family=Noto+Sans+KR:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/quiz.css">
+  <link rel="stylesheet" href="css/host.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="host">
+  <div class="stage">
+
+    <header class="stage__top">
+      <div class="stage__where">
+        <span id="top-round" class="stage__round"></span>
+        <span id="top-question"></span>
+      </div>
+      <div id="top-pips" class="pips"></div>
+      <div class="stage__title" id="top-title"></div>
+    </header>
+
+    <main id="stage" class="stage__body"></main>
+
+    <footer class="stage__foot">
+      <span id="foot-left"></span>
+      <span id="foot-right"></span>
+    </footer>
+
+  </div>
+
+  <script type="module" src="js/host.js"></script>
+</body>
+</html>

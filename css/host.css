@@ -1,0 +1,427 @@
+/* ===========================================================================
+   Big screen — the projector / TV view.
+
+   Same palette, inverted: deep burgundy ground, ivory type, gold hairlines.
+   Everything is sized off vmin so one layout works on a laptop lid, a 55"
+   television and a projector without a single media query for each.
+   =========================================================================== */
+
+body.host {
+  background: var(--burg-ink);
+  color: var(--ivory);
+  overflow: hidden;
+  height: 100vh;
+  height: 100dvh;
+}
+body.host::before {
+  background:
+    radial-gradient(70% 55% at 18% 8%, rgba(168, 90, 74, .34), transparent 72%),
+    radial-gradient(60% 50% at 88% 14%, rgba(122, 92, 120, .32), transparent 72%),
+    radial-gradient(90% 70% at 50% 108%, rgba(198, 168, 130, .18), transparent 70%);
+}
+
+.host {
+  --pad: clamp(20px, 3.4vmin, 52px);
+}
+
+.stage {
+  height: 100vh;
+  height: 100dvh;
+  padding: var(--pad);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2vmin, 28px);
+}
+
+/* ------------------------------------------------------------------ topbar */
+
+.stage__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-shrink: 0;
+  padding-bottom: clamp(8px, 1.4vmin, 18px);
+  border-bottom: 1px solid rgba(198, 168, 130, .28);
+}
+.stage__where {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(8px, 1.4vmin, 18px);
+  font-size: clamp(11px, 1.5vmin, 18px);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: rgba(250, 244, 239, .58);
+  min-width: 0;
+}
+.stage__round { color: var(--gold); }
+.stage__title {
+  font-family: var(--serif);
+  font-size: clamp(15px, 2vmin, 26px);
+  letter-spacing: .04em;
+  color: rgba(250, 244, 239, .82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Progress pips — one per question in the round */
+.pips { display: flex; gap: clamp(4px, .7vmin, 9px); flex-wrap: wrap; }
+.pip {
+  width: clamp(7px, 1.1vmin, 14px);
+  height: clamp(7px, 1.1vmin, 14px);
+  border-radius: 50%;
+  background: rgba(250, 244, 239, .2);
+  transition: background-color .3s, transform .3s;
+}
+.pip.is-done { background: rgba(198, 168, 130, .62); }
+.pip.is-now { background: var(--gold); transform: scale(1.4); }
+
+/* ------------------------------------------------------------------- body  */
+
+.stage__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.stage__body.is-entering { animation: hostRise .42s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes hostRise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.stage__foot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  font-size: clamp(11px, 1.5vmin, 18px);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: rgba(250, 244, 239, .5);
+}
+
+/* ------------------------------------------------------------------- join  */
+
+.joinsplit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(20px, 4vmin, 64px);
+  align-items: center;
+  height: 100%;
+}
+@media (max-aspect-ratio: 9/10) {
+  .joinsplit { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+}
+
+.joinsplit__hello {
+  font-family: var(--serif);
+  font-size: clamp(34px, 7.5vmin, 108px);
+  line-height: 1.04;
+  letter-spacing: .01em;
+}
+.joinsplit__lead {
+  margin-top: clamp(10px, 1.8vmin, 26px);
+  font-size: clamp(14px, 2.1vmin, 28px);
+  line-height: 1.6;
+  color: rgba(250, 244, 239, .68);
+  max-width: 22em;
+}
+.joinsplit__url {
+  display: inline-block;
+  margin-top: clamp(12px, 2vmin, 28px);
+  padding: clamp(7px, 1.1vmin, 14px) clamp(14px, 2.2vmin, 28px);
+  border-radius: var(--r-pill);
+  border: 1px solid rgba(198, 168, 130, .45);
+  font-size: clamp(14px, 2.1vmin, 28px);
+  letter-spacing: .06em;
+  color: var(--gold);
+  word-break: break-all;
+}
+
+.qr {
+  background: var(--ivory);
+  padding: clamp(12px, 1.8vmin, 24px);
+  border-radius: clamp(14px, 2vmin, 26px);
+  box-shadow: 0 30px 60px -28px rgba(0, 0, 0, .7);
+  line-height: 0;
+}
+.qr canvas, .qr img { display: block; width: clamp(150px, 26vmin, 330px) !important; height: auto !important; }
+.qr__caption {
+  margin-top: clamp(8px, 1.2vmin, 14px);
+  text-align: center;
+  font-size: clamp(10px, 1.4vmin, 16px);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: #5A4E44;
+  line-height: 1.4;
+}
+
+/* Teams flowing in while people join */
+.joiners {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(6px, 1vmin, 12px);
+  margin-top: clamp(14px, 2.4vmin, 34px);
+  max-height: 34vh;
+  overflow: hidden;
+}
+.joiner {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: clamp(5px, .8vmin, 10px) clamp(11px, 1.6vmin, 20px);
+  border-radius: var(--r-pill);
+  background: rgba(250, 244, 239, .09);
+  border: 1px solid rgba(250, 244, 239, .16);
+  font-size: clamp(12px, 1.8vmin, 22px);
+  animation: pop .38s cubic-bezier(.2, 1.4, .4, 1) both;
+  max-width: 100%;
+}
+.joiner__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* --------------------------------------------------------------- question  */
+
+.hq {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(18px, 3.2vmin, 54px);
+  align-items: start;
+}
+.hq--noclock { grid-template-columns: minmax(0, 1fr); }
+
+.hq__prompt {
+  font-family: var(--serif);
+  font-size: clamp(28px, 6vmin, 84px);
+  line-height: 1.14;
+  letter-spacing: .005em;
+}
+.hq__image {
+  margin-top: clamp(12px, 2vmin, 26px);
+  max-height: 32vh;
+  border-radius: clamp(10px, 1.4vmin, 18px);
+  border: 1px solid rgba(198, 168, 130, .3);
+}
+
+.hq__options {
+  display: grid;
+  gap: clamp(8px, 1.4vmin, 16px);
+  margin-top: clamp(16px, 2.8vmin, 40px);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+}
+/* Four options read better as a square than as a row of three and a straggler */
+@media (min-width: 900px) {
+  .hq__options[data-n="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.hopt {
+  display: flex;
+  align-items: center;
+  gap: clamp(9px, 1.4vmin, 18px);
+  padding: clamp(10px, 1.6vmin, 22px) clamp(13px, 2vmin, 28px);
+  border-radius: clamp(11px, 1.6vmin, 20px);
+  background: rgba(250, 244, 239, .07);
+  border: 1px solid rgba(250, 244, 239, .16);
+  font-size: clamp(15px, 2.3vmin, 32px);
+  line-height: 1.3;
+  transition: background-color .4s, border-color .4s, opacity .4s;
+}
+.hopt__key {
+  width: clamp(26px, 3.4vmin, 46px);
+  height: clamp(26px, 3.4vmin, 46px);
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(198, 168, 130, .22);
+  color: var(--gold);
+  font-size: clamp(12px, 1.7vmin, 22px);
+}
+.hopt.is-right {
+  background: rgba(198, 168, 130, .95);
+  border-color: var(--gold);
+  color: #3B2E1C;
+}
+.hopt.is-right .hopt__key { background: #3B2E1C; color: var(--gold); }
+.hopt.is-dim { opacity: .34; }
+
+/* clock + answers-in */
+.hclock { display: flex; flex-direction: column; align-items: center; gap: clamp(10px, 1.6vmin, 20px); }
+.hclock .ring-wrap { display: inline-grid; place-items: center; }
+.hclock .ring__track { stroke: rgba(250, 244, 239, .16); stroke-width: 6; }
+.hclock .ring__value { stroke: var(--gold); stroke-width: 6; }
+.hclock .ring.is-urgent .ring__value { stroke: #E28B7B; }
+.hclock .ring__label {
+  font-family: var(--serif);
+  font-size: clamp(24px, 4.4vmin, 62px);
+  color: var(--ivory);
+}
+.hclock .ring.is-urgent ~ .ring__label { color: #E28B7B; }
+
+.tally {
+  text-align: center;
+  font-size: clamp(11px, 1.5vmin, 18px);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: rgba(250, 244, 239, .58);
+}
+.tally__n {
+  display: block;
+  font-family: var(--serif);
+  font-size: clamp(22px, 3.6vmin, 50px);
+  color: var(--ivory);
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dots that fill as tables lock in — the "everyone is answering" feeling */
+.inbox { display: flex; flex-wrap: wrap; gap: clamp(4px, .6vmin, 8px); justify-content: center; max-width: 16em; }
+.inbox__dot {
+  width: clamp(8px, 1.2vmin, 15px);
+  height: clamp(8px, 1.2vmin, 15px);
+  border-radius: 50%;
+  background: rgba(250, 244, 239, .18);
+  transition: background-color .3s, transform .3s;
+}
+.inbox__dot.is-in { background: var(--gold); transform: scale(1.18); }
+
+/* ----------------------------------------------------------------- reveal  */
+
+.reveal__label {
+  font-size: clamp(11px, 1.6vmin, 20px);
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: clamp(8px, 1.4vmin, 18px);
+}
+.reveal__answer {
+  font-family: var(--serif);
+  font-size: clamp(30px, 6.6vmin, 92px);
+  line-height: 1.14;
+}
+.reveal__who {
+  margin-top: clamp(14px, 2.4vmin, 34px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(6px, 1vmin, 12px);
+  align-items: center;
+}
+.reveal__none {
+  font-size: clamp(14px, 2.1vmin, 28px);
+  color: rgba(250, 244, 239, .55);
+  font-style: italic;
+}
+
+/* ------------------------------------------------------------------ board  */
+
+.hboard { display: flex; flex-direction: column; gap: clamp(5px, .8vmin, 10px); overflow: hidden; }
+.hrow {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.6vmin, 22px);
+  padding: clamp(8px, 1.3vmin, 18px) clamp(13px, 2vmin, 28px);
+  border-radius: clamp(10px, 1.5vmin, 18px);
+  background: rgba(250, 244, 239, .07);
+  border: 1px solid rgba(250, 244, 239, .12);
+  font-size: clamp(15px, 2.2vmin, 30px);
+  animation: hostRise .4s cubic-bezier(.16, 1, .3, 1) both;
+}
+.hrow__place {
+  font-family: var(--serif);
+  width: clamp(28px, 3.6vmin, 52px);
+  flex-shrink: 0;
+  color: rgba(250, 244, 239, .5);
+  font-variant-numeric: tabular-nums;
+}
+.hrow__emoji { font-size: clamp(17px, 2.6vmin, 36px); flex-shrink: 0; }
+.hrow__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hrow__score {
+  font-family: var(--serif);
+  font-size: clamp(19px, 3vmin, 42px);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.hrow--1 {
+  background: linear-gradient(100deg, rgba(198, 168, 130, .34), rgba(198, 168, 130, .1));
+  border-color: var(--gold);
+}
+.hrow--1 .hrow__place, .hrow--1 .hrow__score { color: var(--gold); }
+.hrow--2 { border-color: rgba(250, 244, 239, .3); }
+.hrow--3 { border-color: rgba(168, 90, 74, .5); }
+
+/* ------------------------------------------------------------------- end   */
+
+.finale { text-align: center; }
+.finale__label {
+  font-size: clamp(11px, 1.6vmin, 20px);
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.finale__winner {
+  font-family: var(--serif);
+  font-size: clamp(38px, 9vmin, 132px);
+  line-height: 1.06;
+  margin: clamp(10px, 1.8vmin, 24px) 0;
+}
+.finale__score {
+  font-size: clamp(16px, 2.6vmin, 36px);
+  color: rgba(250, 244, 239, .7);
+}
+.finale__thanks {
+  margin-top: clamp(18px, 3vmin, 44px);
+  font-family: var(--serif);
+  font-size: clamp(16px, 2.4vmin, 32px);
+  color: rgba(250, 244, 239, .62);
+}
+
+/* A slow shimmer across the winner's name — the only motion on this screen */
+.finale__winner {
+  background: linear-gradient(100deg, var(--ivory) 30%, var(--gold) 50%, var(--ivory) 70%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 5s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0%, 100% { background-position: 130% 0; }
+  50%      { background-position: -30% 0; }
+}
+
+/* The countdown between phases, and the "get ready" card */
+.getready { text-align: center; }
+.getready__round {
+  font-size: clamp(11px, 1.6vmin, 20px);
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: clamp(10px, 1.6vmin, 20px);
+}
+.getready__title {
+  font-family: var(--serif);
+  font-size: clamp(34px, 8vmin, 116px);
+  line-height: 1.08;
+}
+.getready__blurb {
+  margin-top: clamp(12px, 2vmin, 28px);
+  font-size: clamp(14px, 2.2vmin, 30px);
+  line-height: 1.55;
+  color: rgba(250, 244, 239, .68);
+  max-width: 24em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Host screens have no language menu chrome of their own */
+body.host .lang-menu__toggle {
+  background: rgba(250, 244, 239, .1);
+  border-color: rgba(250, 244, 239, .2);
+  color: var(--ivory);
+}
+body.host .lang-menu__list { background: var(--burg-deep); border-color: rgba(250, 244, 239, .18); }
+body.host .lang-btn { color: var(--ivory); }
+body.host .lang-btn:hover { background: rgba(250, 244, 239, .12); }
+body.host .lang-btn.active { background: var(--gold); color: #3B2E1C; }

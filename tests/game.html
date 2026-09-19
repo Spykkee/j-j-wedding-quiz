@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>e2e</title></head>
+<body>
+<div id="pane-run"></div><div id="pane-build"></div><div id="pane-tables"></div>
+<pre id="out"></pre>
+<script type="module">
+import { openStore } from '../js/store.js';
+import { renderRun, renderTables, maybeAutoClose } from '../js/admin-run.js';
+import { renderBuild } from '../js/admin-build.js';
+import { normaliseQuiz, computeScores, leaderboard, countQuestions } from '../js/model.js';
+
+const out = document.getElementById('out');
+let fails = 0;
+const log = (s) => { out.textContent += s + '\n'; };
+function ok(label, cond, extra) {
+  if (cond) log('ok   ' + label);
+  else { fails++; log('FAIL ' + label + (extra ? ' :: ' + extra : '')); }
+}
+const tick = () => new Promise((r) => setTimeout(r, 0));
+
+try { localStorage.clear(); } catch (e) {}
+
+try {
+const store = openStore();
+ok('store is offline driver', store.mode === 'offline', store.mode);
+
+const quiz = normaliseQuiz({
+  title: { en: 'Test quiz' },
+  rounds: [
+    { title: { en: 'R1' }, questions: [
+      { type: 'mc', prompt: { en: 'Pick B' }, points: 2, time: 0,
+        options: [ { id: 'oa', text: { en: 'A' } }, { id: 'ob', text: { en: 'B' } } ], correct: 'ob' },
+      { type: 'exact', prompt: { en: 'Spell Avignon' }, points: 3, time: 0,
+        accept: ['Avignon'], fuzzy: true }
+    ] },
+    { title: { en: 'R2' }, questions: [
+      { type: 'free', prompt: { en: 'Say anything' }, points: 4, time: 0, note: 'judge me' }
+    ] }
+  ]
+});
+ok('quiz has 3 questions', countQuestions(quiz) === 3, countQuestions(quiz));
+
+const ctx = {
+  store,
+  db: { state: null, teams: {}, answers: {}, adjust: {}, quiz: null },
+  quiz,
+  dirty: false,
+  loaded: true,
+  openCards: new Set(),
+  markDirty() { ctx.dirty = true; },
+  publish() {},
+  refresh() {},
+  panes: {
+    run: document.getElementById('pane-run'),
+    build: document.getElementById('pane-build'),
+    tables: document.getElementById('pane-tables')
+  }
+};
+
+store.watch('state', (v) => { ctx.db.state = v; });
+store.watch('teams', (v) => { ctx.db.teams = v || {}; });
+store.watch('answers', (v) => { ctx.db.answers = v || {}; });
+store.watch('adjust', (v) => { ctx.db.adjust = v || {}; });
+
+await store.write('quiz', quiz);
+await store.write('state', { phase: 'lobby', r: 0, q: 0, open: false });
+await tick();
+
+function click(act) {
+  renderRun(ctx);
+  const btn = ctx.panes.run.querySelector('[data-act="' + act + '"]');
+  if (!btn) { fails++; log('FAIL no button for ' + act); return Promise.resolve(); }
+  btn.click();
+  return tick().then(tick);
+}
+
+/* ---- two tables join ------------------------------------------------- */
+await store.write('teams/t1', { name: 'Alpha', at: 1 });
+await store.write('teams/t2', { name: 'Bravo', at: 2 });
+await tick();
+ok('two teams joined', Object.keys(ctx.db.teams).length === 2);
+
+/* ---- start -> round intro -> first question -------------------------- */
+await click('ready');
+ok('phase ready', ctx.db.state.phase === 'ready', JSON.stringify(ctx.db.state));
+
+await click('showQ');
+ok('phase question', ctx.db.state.phase === 'question', ctx.db.state.phase);
+ok('answers are open', ctx.db.state.open === true);
+ok('no timer when time is 0', !ctx.db.state.endsAt);
+
+/* ---- guests answer (value only, as the real phone does) -------------- */
+await store.write('answers/0-0/t1', { name: 'Alpha', value: 'ob', at: 10 });
+await store.write('answers/0-0/t2', { name: 'Bravo', value: 'oa', at: 11 });
+await tick();
+ok('guest answer carries no points', ctx.db.answers['0-0'].t1.pts === undefined);
+
+/* ---- close + reveal grades automatically ----------------------------- */
+await click('close');
+ok('answers closed', ctx.db.state.open === false);
+
+await click('reveal');
+ok('phase reveal', ctx.db.state.phase === 'reveal', ctx.db.state.phase);
+ok('mc right scored', ctx.db.answers['0-0'].t1.state === 'correct' && ctx.db.answers['0-0'].t1.pts === 2,
+   JSON.stringify(ctx.db.answers['0-0'].t1));
+ok('mc wrong scored 0', ctx.db.answers['0-0'].t2.state === 'wrong' && ctx.db.answers['0-0'].t2.pts === 0);
+ok('reveal names the option', ctx.db.state.reveal.optionId === 'ob' && ctx.db.state.reveal.text === 'B',
+   JSON.stringify(ctx.db.state.reveal));
+
+/* ---- next question, fuzzy exact match -------------------------------- */
+await click('next');
+ok('moved to q2 same round', ctx.db.state.r === 0 && ctx.db.state.q === 1,
+   ctx.db.state.r + '/' + ctx.db.state.q);
+
+await store.write('answers/0-1/t1', { name: 'Alpha', value: '  avignonn ', at: 20 });
+await store.write('answers/0-1/t2', { name: 'Bravo', value: 'Marseille', at: 21 });
+await tick();
+await click('reveal');
+ok('typo accepted', ctx.db.answers['0-1'].t1.state === 'correct' && ctx.db.answers['0-1'].t1.pts === 3,
+   JSON.stringify(ctx.db.answers['0-1'].t1));
+ok('wrong town rejected', ctx.db.answers['0-1'].t2.state === 'wrong');
+
+/* ---- end of round -> scores ------------------------------------------ */
+await click('roundScores');
+ok('phase scores', ctx.db.state.phase === 'scores' && ctx.db.state.scope === 'round',
+   JSON.stringify(ctx.db.state));
+let totals = computeScores(ctx.db.teams, ctx.db.answers, ctx.db.adjust);
+ok('running totals', totals.t1 === 5 && totals.t2 === 0, JSON.stringify(totals));
+
+/* ---- next round crosses into round 2 --------------------------------- */
+await click('nextRound');
+ok('round 2 intro', ctx.db.state.phase === 'ready' && ctx.db.state.r === 1,
+   JSON.stringify(ctx.db.state));
+await click('showQ');
+ok('round 2 question 1', ctx.db.state.r === 1 && ctx.db.state.q === 0);
+
+/* ---- free text waits for a human ------------------------------------- */
+await store.write('answers/1-0/t1', { name: 'Alpha', value: 'something witty', at: 30 });
+await store.write('answers/1-0/t2', { name: 'Bravo', value: 'less witty', at: 31 });
+await tick();
+await click('reveal');
+ok('free text left pending', ctx.db.answers['1-0'].t1.state === 'pending' &&
+   ctx.db.answers['1-0'].t1.pts === 0, JSON.stringify(ctx.db.answers['1-0'].t1));
+
+/* judge: full marks for t1, half for t2 */
+renderRun(ctx);
+const marks = [...ctx.panes.run.querySelectorAll('[data-act="mark"][data-id="t1"]')];
+ok('three marks offered (0 / half / full)', marks.length === 3, marks.length);
+marks[2].click();                     // full
+await tick(); await tick();
+ok('full marks awarded', ctx.db.answers['1-0'].t1.pts === 4 &&
+   ctx.db.answers['1-0'].t1.state === 'correct' && ctx.db.answers['1-0'].t1.manual === true,
+   JSON.stringify(ctx.db.answers['1-0'].t1));
+
+renderRun(ctx);
+const marks2 = [...ctx.panes.run.querySelectorAll('[data-act="mark"][data-id="t2"]')];
+marks2[1].click();                    // half
+await tick(); await tick();
+ok('half marks awarded', ctx.db.answers['1-0'].t2.pts === 2 &&
+   ctx.db.answers['1-0'].t2.state === 'partial', JSON.stringify(ctx.db.answers['1-0'].t2));
+
+/* a second Reveal must not undo the hand marking */
+await click('reveal');
+ok('hand marks survive a re-reveal', ctx.db.answers['1-0'].t1.pts === 4 &&
+   ctx.db.answers['1-0'].t2.pts === 2);
+
+/* ---- finish ----------------------------------------------------------- */
+await click('finalScores');
+ok('final scores', ctx.db.state.phase === 'scores' && ctx.db.state.scope === 'final');
+totals = computeScores(ctx.db.teams, ctx.db.answers, ctx.db.adjust);
+ok('final totals', totals.t1 === 9 && totals.t2 === 2, JSON.stringify(totals));
+
+const board = leaderboard(ctx.db.teams, totals);
+ok('leaderboard ordered', board[0].id === 't1' && board[0].place === 1 && board[1].place === 2);
+
+await click('end');
+ok('phase ended', ctx.db.state.phase === 'ended');
+
+/* ---- manual point adjustment from the Tables pane --------------------- */
+renderTables(ctx);
+ctx.panes.tables.querySelector('[data-act="plus"][data-id="t2"]').click();
+await tick(); await tick();
+ok('adjust +1 applied', (ctx.db.adjust || {}).t2 === 1, JSON.stringify(ctx.db.adjust));
+totals = computeScores(ctx.db.teams, ctx.db.answers, ctx.db.adjust);
+ok('adjust reaches the total', totals.t2 === 3, JSON.stringify(totals));
+
+/* ---- prev walks backwards across a round boundary --------------------- */
+await store.write('state', { phase: 'question', r: 1, q: 0, open: false });
+await tick();
+await click('prev');
+ok('prev crosses back into round 1', ctx.db.state.r === 0 && ctx.db.state.q === 1,
+   ctx.db.state.r + '/' + ctx.db.state.q);
+
+/* ---- the build pane renders and edits --------------------------------- */
+renderBuild(ctx);
+const prompts = ctx.panes.build.querySelectorAll('[data-act="prompt"][data-lang="en"]');
+ok('build pane shows every question', prompts.length === 3, prompts.length);
+prompts[0].value = 'Edited prompt';
+prompts[0].dispatchEvent(new Event('input', { bubbles: true }));
+ok('typing updates the model', ctx.quiz.rounds[0].questions[0].prompt.en === 'Edited prompt',
+   ctx.quiz.rounds[0].questions[0].prompt.en);
+ok('typing marks it dirty', ctx.dirty === true);
+
+const addBtn = ctx.panes.build.querySelector('[data-act="addQ"][data-type="exact"]');
+addBtn.click();
+ok('add question works', countQuestions(ctx.quiz) === 4, countQuestions(ctx.quiz));
+
+/* ---- a timed question closes itself at the buzzer --------------------- */
+await store.write('state', { phase: 'question', r: 0, q: 0, open: true,
+  startedAt: Date.now() - 20000, endsAt: Date.now() - 1000 });
+await tick();
+maybeAutoClose(ctx);
+await tick(); await tick();
+ok('expired question auto-closes', ctx.db.state.open === false, JSON.stringify(ctx.db.state));
+
+await store.write('state', { phase: 'question', r: 0, q: 0, open: true,
+  startedAt: Date.now(), endsAt: Date.now() + 60000 });
+await tick();
+maybeAutoClose(ctx);
+await tick(); await tick();
+ok('running question stays open', ctx.db.state.open === true);
+
+log(fails ? '\nRESULT: ' + fails + ' FAILURES' : '\nRESULT: all e2e checks passed');
+} catch (err) {
+  log('\nRESULT: THREW ' + (err && err.stack ? err.stack : err));
+}
+</script>
+</body></html>
