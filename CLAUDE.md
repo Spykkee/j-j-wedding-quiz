@@ -131,9 +131,11 @@ machine; the bundled headless shell above works.)
 
 ## Still open
 
-- No git remote yet. The user's convention (see their memory) is that "push" or
-  "merge" means land on `main` and go live — not open a PR.
-- The real quiz content has not been written; `samples/sample-quiz.json` is a
-  placeholder starter with invented facts.
+- The user's convention (see their memory) is that "push" or "merge" means land
+  on `main` and go live — not open a PR.
+- The real quiz lives in `quiz/jj-quiz.json`, which is **gitignored**: this repo
+  is public and that file holds the answers. Import it from the Build pane.
+  Its `quiz/README.md` lists the answers only the couple can settle.
+  `samples/sample-quiz.json` stays as the placeholder the tests use.
 - Answers are world-readable by design, so the unauthenticated big screen can
   show who got it right. Accepted trade-off, documented in the rules file.

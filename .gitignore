@@ -2,3 +2,6 @@
 Thumbs.db
 firebase-debug.log
 *.log
+
+# The real quiz, with the answers in it. Never commit this to a public repo.
+quiz/
