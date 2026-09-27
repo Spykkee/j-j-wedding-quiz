@@ -419,7 +419,12 @@ body::before {
   transition: border-color .15s, background-color .15s, transform .12s;
   -webkit-tap-highlight-color: transparent;
 }
-.option:hover:not(:disabled) { border-color: var(--burg); }
+/* Hover only for a real mouse. On phones :hover sticks to wherever the last
+   tap landed, so the next question would open with an option outlined in
+   burgundy — which reads as a hint. */
+@media (hover: hover) and (pointer: fine) {
+  .option:hover:not(:disabled) { border-color: var(--burg); }
+}
 .option:active:not(:disabled) { transform: translateY(1px); }
 .option:disabled { cursor: default; }
 .option__key {
