@@ -25,7 +25,7 @@
      signInAdmin(email, pw)   -> Promise
      signOutAdmin()           -> Promise
      onAdmin(cb)              -> unsubscribe(); cb(emailOrNull)
-     onConnection(cb)         -> unsubscribe(); cb(bool)
+     onConnection(cb)         -> unsubscribe(); cb(bool), false only on a real drop
 
    Paths are '/'-joined and relative to the room, e.g. 'teams/abc123'.
    --------------------------------------------------------------------------- */
@@ -69,6 +69,8 @@ function firebaseDriver() {
   const adminSubs = new Set();
   const connSubs = new Set();
   let connected = false;
+  let everConnected = false;     // a page that is still starting up has not "lost" anything
+  let dropTimer = null;
 
   const boot = (async () => {
     const [appMod, dbMod, authMod] = await Promise.all([
@@ -84,9 +86,23 @@ function firebaseDriver() {
     dbMod.onValue(dbMod.ref(db, '.info/serverTimeOffset'), (snap) => {
       offset = Number(snap.val()) || 0;
     });
+    /* .info/connected reports false while the socket is first opening, and
+       for a moment during ordinary blips. Only pass on a drop from a page that
+       was connected and has stayed down for a couple of seconds — otherwise
+       every refresh flashes "Reconnecting…". */
     dbMod.onValue(dbMod.ref(db, '.info/connected'), (snap) => {
       connected = snap.val() === true;
-      connSubs.forEach((cb) => cb(connected));
+      if (connected) {
+        everConnected = true;
+        clearTimeout(dropTimer);
+        dropTimer = null;
+        connSubs.forEach((cb) => cb(true));
+      } else if (everConnected && !dropTimer) {
+        dropTimer = setTimeout(() => {
+          dropTimer = null;
+          if (!connected) connSubs.forEach((cb) => cb(false));
+        }, 2500);
+      }
     });
     authMod.onAuthStateChanged(auth, (user) => {
       /* Anonymous guests are users too - only a signed-in email counts as the
@@ -162,7 +178,7 @@ function firebaseDriver() {
 
     onConnection(cb) {
       connSubs.add(cb);
-      boot.then(() => cb(connected));
+      boot.then(() => { if (connected) cb(true); });
       return () => connSubs.delete(cb);
     }
   };
