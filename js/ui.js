@@ -19,32 +19,34 @@ export const TEAM_COLORS = [
   '#A56A82'  // dusty rose
 ];
 
-/* One per table — eleven tables, eleven emoji, half wedding and half
-   Provence. Each table picks its own when it joins. */
-export const TEAM_EMOJI = [
-  '🪻', // lavender
-  '💍', // rings
-  '🥂', // champagne
-  '💐', // bouquet
-  '🎂', // cake
-  '🕊️', // doves
-  '💌', // love letter
-  '🍷', // rosé, near enough
-  '🫒', // olives
-  '🤍', // white heart
-  '🍇'  // vines
+/* One per table. Every table is named after a city, and picks that city's
+   flag when it joins — eleven tables, eleven flags, no two countries alike. */
+export const TEAM_FLAGS = [
+  { flag: '🇦🇺', city: 'Sydney' },
+  { flag: '🇦🇹', city: 'Innsbruck' },
+  { flag: '🇫🇷', city: 'Paris' },
+  { flag: '🇰🇷', city: 'Seoul' },
+  { flag: '🇸🇪', city: 'Kiruna' },
+  { flag: '🇪🇸', city: 'Barcelona' },
+  { flag: '🇩🇰', city: 'Copenhagen' },
+  { flag: '🇳🇱', city: 'Den Haag' },
+  { flag: '🇨🇭', city: 'Zurich' },
+  { flag: '🇨🇦', city: 'Nova Scotia' },
+  { flag: '🇯🇵', city: 'Tokyo' }
 ];
+export const TEAM_EMOJI = TEAM_FLAGS.map((f) => f.flag);
 
 /* Same team, same colour and emoji everywhere. The colour is derived from the
    id; the emoji is the one the table picked (stored on the team), falling back
-   to a derived one for a team that joined before picking was a thing. Pass the
+   to a derived one (and no city) for a team that joined before picking. Pass the
    team record so the choice is honoured. */
 export function identity(teamId, team) {
   const h = hash(String(teamId || ''));
   const chosen = team && TEAM_EMOJI.indexOf(team.emoji) !== -1 ? team.emoji : null;
   return {
     color: TEAM_COLORS[h % TEAM_COLORS.length],
-    emoji: chosen || TEAM_EMOJI[Math.floor(h / TEAM_COLORS.length) % TEAM_EMOJI.length]
+    emoji: chosen || TEAM_EMOJI[Math.floor(h / TEAM_COLORS.length) % TEAM_EMOJI.length],
+    city: chosen ? TEAM_FLAGS[TEAM_EMOJI.indexOf(chosen)].city : ''
   };
 }
 

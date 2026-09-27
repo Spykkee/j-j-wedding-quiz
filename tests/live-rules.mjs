@@ -79,9 +79,9 @@ ok('GUEST CANNOT WRITE ANOTHER TABLE\'S RECORD', !hijack.ok, 'status ' + hijack.
 const longName = await db('PUT', 'teams/' + guest.uid, guest.token,
   { name: 'x'.repeat(40), at: Date.now() });
 ok('over-long team name rejected', !longName.ok, 'status ' + longName.status);
-ok('guest saves its chosen emoji',
+ok('guest saves its chosen flag',
    (await db('PUT', 'teams/' + guest.uid, guest.token,
-     { name: 'Alpha', emoji: '🕊️', at: Date.now() })).ok);
+     { name: 'Alpha', emoji: '🇫🇷', at: Date.now() })).ok);
 const longEmoji = await db('PUT', 'teams/' + guest.uid, guest.token,
   { name: 'Alpha', emoji: 'x'.repeat(20), at: Date.now() });
 ok('over-long emoji rejected', !longEmoji.ok, 'status ' + longEmoji.status);

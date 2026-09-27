@@ -45,8 +45,10 @@
   --r-card: 18px;
   --r-pill: 999px;
 
-  --serif: 'Cormorant Garamond', Georgia, serif;
-  --sans: 'Jost', 'Noto Sans KR', system-ui, sans-serif;
+  /* 'Noto Color Emoji' is loaded with only the flag letters in it, so it draws
+     the table flags and nothing else. */
+  --serif: 'Cormorant Garamond', 'Noto Color Emoji', Georgia, serif;
+  --sans: 'Jost', 'Noto Sans KR', 'Noto Color Emoji', system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -423,18 +425,20 @@ body::before {
 
 .emoji-pick {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);   /* eleven: six over five */
+  grid-template-columns: repeat(3, 1fr);
   gap: 7px;
-  max-width: 400px;
 }
 .emoji-pick__opt {
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 4px 8px;
   border: 0.5px solid var(--stone);
   border-radius: 14px;
   background: #fff;
-  font-size: 26px;
+  color: var(--text);
+  font-family: var(--sans);
   line-height: 1;
   cursor: pointer;
   transition: border-color .15s, background-color .15s, transform .12s, opacity .15s;
@@ -446,6 +450,8 @@ body::before {
   background: var(--burg-pale);
   box-shadow: inset 0 0 0 1.5px var(--burg);
 }
+.emoji-pick__flag { font-size: 28px; }
+.emoji-pick__city { font-size: 12.5px; font-weight: 400; letter-spacing: .01em; }
 .emoji-pick__opt:disabled { opacity: .25; filter: grayscale(1); cursor: default; }
 
 /* Hover only for a real mouse. On phones :hover sticks to wherever the last

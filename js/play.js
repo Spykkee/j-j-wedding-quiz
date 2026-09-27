@@ -16,7 +16,7 @@ import {
   pick, answerKey, leaderboard, computeScores, normaliseQuiz
 } from './model.js';
 import {
-  identity, escapeHtml, ring, ringMarkup, confetti, toast, show, suggestName, TEAM_EMOJI
+  identity, escapeHtml, ring, ringMarkup, confetti, toast, show, suggestName, TEAM_EMOJI, TEAM_FLAGS
 } from './ui.js';
 
 const store = openStore();
@@ -159,11 +159,12 @@ function paintJoin() {
             'data-i18n-attr="placeholder:join.ph" value="' + escapeHtml(existing) + '">' +
         '</label>' +
         '<div class="field">' +
-          '<span class="field__label" data-i18n="join.emoji">Your table’s emoji</span>' +
+          '<span class="field__label" data-i18n="join.emoji">Your table’s city</span>' +
           '<div class="emoji-pick" id="emoji-pick" role="radiogroup">' +
-            TEAM_EMOJI.map((e) =>
-              '<button type="button" class="emoji-pick__opt" role="radio" data-emoji="' + e + '">' +
-                e + '</button>'
+            TEAM_FLAGS.map((f) =>
+              '<button type="button" class="emoji-pick__opt" role="radio" data-emoji="' + f.flag + '">' +
+                '<span class="emoji-pick__flag">' + f.flag + '</span>' +
+                '<span class="emoji-pick__city">' + escapeHtml(f.city) + '</span></button>'
             ).join('') +
           '</div>' +
         '</div>' +
@@ -240,7 +241,7 @@ function paintJoin() {
   }
 }
 
-/* Emoji held by other tables. Once all eleven are gone (a rehearsal with more
+/* Flags held by other tables. Once all eleven are gone (a rehearsal with more
    phones than tables) nothing is held back, so nobody is ever locked out. */
 function emojiTaken() {
   const held = new Set();
@@ -276,6 +277,7 @@ function paintLobby() {
   show(app,
     '<section class="panel" style="text-align:center">' +
       '<div style="font-size:42px;line-height:1">' + id.emoji + '</div>' +
+      (id.city ? '<div class="fine" style="margin-top:.35rem">' + escapeHtml(id.city) + '</div>' : '') +
       '<h1 class="h-display" style="margin-top:.4rem" data-i18n="lobby.in">You are in!</h1>' +
       '<div style="margin:.7rem 0 .2rem">' +
         '<span class="chip chip--solid" style="--chip:' + id.color + '">' +
