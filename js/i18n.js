@@ -31,12 +31,12 @@ const STR = {
 
     /* joining */
     'join.h1': 'Pick your table',
-    'join.lead': 'One phone per table is plenty — gather round, pick your table’s city, and you are in.',
+    'join.lead': 'One phone per table is plenty — gather round, pick your table, and you are in.',
     'join.cta': 'Join the quiz',
     'join.joining': 'Joining…',
-    'join.err.emoji': 'Pick your table’s city first.',
-    'join.err.full': 'Every city is taken. Find one of us and we will sort it out.',
-    'join.err.emojiTaken': 'Another table just took that city. Pick yours again.',
+    'join.err.emoji': 'Pick your table first.',
+    'join.err.full': 'Every table is taken. Find one of us and we will sort it out.',
+    'join.err.emojiTaken': 'Another phone just took that table. Pick yours again.',
     'join.err.failed': 'Could not join. Check your connection and try again.',
     'join.err.closed': 'The quiz is already under way — find one of us and we will add you.',
 
@@ -44,7 +44,7 @@ const STR = {
     'lobby.in': 'You are in!',
     'lobby.wait': 'Keep this page open. The first question will appear here.',
     'lobby.teams': 'Tables already playing',
-    'lobby.rename': 'Change city',
+    'lobby.rename': 'Change table',
 
     /* playing */
     'play.round': 'Round',
@@ -111,19 +111,19 @@ const STR = {
     'brand.sub': '10 · 10 · 2026 · Provence',
 
     'join.h1': 'Choisissez votre table',
-    'join.lead': 'Un téléphone par table suffit — rassemblez-vous, choisissez la ville de votre table, et c’est parti.',
+    'join.lead': 'Un téléphone par table suffit — rassemblez-vous, choisissez votre table, et c’est parti.',
     'join.cta': 'Rejoindre le quiz',
     'join.joining': 'Connexion…',
-    'join.err.emoji': 'Choisissez d’abord la ville de votre table.',
-    'join.err.full': 'Toutes les villes sont prises. Faites-nous signe et on s’en occupe.',
-    'join.err.emojiTaken': 'Une autre table vient de prendre cette ville. Choisissez la vôtre à nouveau.',
+    'join.err.emoji': 'Choisissez d’abord votre table.',
+    'join.err.full': 'Toutes les tables sont prises. Faites-nous signe et on s’en occupe.',
+    'join.err.emojiTaken': 'Un autre téléphone vient de prendre cette table. Choisissez la vôtre à nouveau.',
     'join.err.failed': 'Impossible de rejoindre. Vérifiez votre connexion et réessayez.',
     'join.err.closed': 'Le quiz a déjà commencé — faites-nous signe et on vous ajoute.',
 
     'lobby.in': 'Vous êtes inscrits !',
     'lobby.wait': 'Gardez cette page ouverte. La première question apparaîtra ici.',
     'lobby.teams': 'Tables déjà en jeu',
-    'lobby.rename': 'Changer de ville',
+    'lobby.rename': 'Changer de table',
 
     'play.round': 'Manche',
     'play.question': 'Question',
@@ -185,19 +185,19 @@ const STR = {
     'brand.sub': '2026 · 10 · 10 · 프로방스',
 
     'join.h1': '테이블을 골라 주세요',
-    'join.lead': '테이블당 휴대폰 한 대면 충분해요. 다 같이 모여 우리 테이블 도시를 고르면 준비 완료입니다.',
+    'join.lead': '테이블당 휴대폰 한 대면 충분해요. 다 같이 모여 우리 테이블을 고르면 준비 완료입니다.',
     'join.cta': '퀴즈 참여하기',
     'join.joining': '참여하는 중…',
-    'join.err.emoji': '먼저 우리 테이블 도시를 골라 주세요.',
-    'join.err.full': '모든 도시가 이미 선택됐어요. 저희에게 알려 주시면 도와드릴게요.',
-    'join.err.emojiTaken': '다른 테이블이 방금 그 도시를 골랐어요. 다시 골라 주세요.',
+    'join.err.emoji': '먼저 우리 테이블을 골라 주세요.',
+    'join.err.full': '모든 테이블이 이미 선택됐어요. 저희에게 알려 주시면 도와드릴게요.',
+    'join.err.emojiTaken': '다른 휴대폰이 방금 그 테이블을 골랐어요. 다시 골라 주세요.',
     'join.err.failed': '참여하지 못했어요. 연결을 확인하고 다시 시도해 주세요.',
     'join.err.closed': '퀴즈가 이미 시작됐어요 — 저희에게 알려 주시면 추가해 드릴게요.',
 
     'lobby.in': '참여 완료!',
     'lobby.wait': '이 페이지를 열어 두세요. 첫 문제가 여기에 나타납니다.',
     'lobby.teams': '참여 중인 테이블',
-    'lobby.rename': '도시 바꾸기',
+    'lobby.rename': '테이블 바꾸기',
 
     'play.round': '라운드',
     'play.question': '문제',

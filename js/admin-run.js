@@ -587,9 +587,9 @@ function citySelect(ctx, id) {
   const known = TEAM_FLAGS.some((f) => f.flag === team.emoji);
   /* An invisible native select over a ✎ button: the row keeps its shape and
      the phone opens its own list. */
-  return '<label class="iconbtn iconbtn--select" title="Move this table to another city">✎' +
-    '<select data-act="city" data-id="' + escapeHtml(id) + '" aria-label="City">' +
-    (known ? '' : '<option value="" selected>' + escapeHtml(team.name || '—') + ' (no city)</option>') +
+  return '<label class="iconbtn iconbtn--select" title="Switch to another table">✎' +
+    '<select data-act="city" data-id="' + escapeHtml(id) + '" aria-label="Table">' +
+    (known ? '' : '<option value="" selected>' + escapeHtml(team.name || '—') + ' (no table picked)</option>') +
     TEAM_FLAGS.map((f) => {
       const mine = f.flag === team.emoji;
       const other = held[f.flag] && held[f.flag] !== id;
@@ -605,7 +605,7 @@ function freeCitiesMarkup(ctx) {
   return '<div class="fine" style="margin-top:.7rem">' +
     (free.length
       ? 'Still free: ' + free.map((f) => f.flag + ' ' + escapeHtml(f.city)).join(', ')
-      : 'Every city is taken.') +
+      : 'Every table is taken.') +
   '</div>';
 }
 
@@ -617,7 +617,7 @@ async function moveCity(ctx, id, flag) {
   try {
     const claims = (await ctx.store.read('claims')) || {};
     if (claims[flag] && claims[flag] !== id) {
-      toast(f.city + ' was just taken by another table.', 'bad');
+      toast(f.city + ' was just taken by another phone.', 'bad');
       return ctx.refresh('game');
     }
     await ctx.store.write('claims/' + flag, id);
@@ -692,7 +692,7 @@ async function onTablesClick(ctx, e) {
       case 'kick': {
         const team = ctx.db.teams[id] || {};
         if (!confirm('Remove "' + (team.name || 'this table') + '"? Their answers stay in the ' +
-          'record but they drop off the leaderboard, and their city is free to pick again.')) return;
+          'record but they drop off the leaderboard, and their table is free to pick again.')) return;
         await ctx.store.erase('teams/' + id);
         await ctx.store.erase('adjust/' + id);
         await releaseClaims(ctx, id);
@@ -711,7 +711,7 @@ async function onTablesClick(ctx, e) {
 
       case 'clearAll': {
         if (!confirm('Clear the answers AND remove every table? Guests will have to scan and ' +
-          'pick their city again.')) return;
+          'pick their table again.')) return;
         await ctx.store.erase('answers');
         await ctx.store.erase('adjust');
         await ctx.store.erase('teams');

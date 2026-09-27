@@ -328,6 +328,8 @@ body::before {
 .chip__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chip__extra { font-variant-numeric: tabular-nums; opacity: .72; }
 .chip--solid { background: var(--chip); color: #fff; border-color: transparent; }
+/* No emoji on the left, so no lopsided padding for one. */
+.chip--text { padding: 5px 14px; justify-content: center; }
 .chip-cloud { display: flex; flex-wrap: wrap; gap: 7px; }
 .chip-cloud .chip { animation: pop .3s cubic-bezier(.2, 1.4, .4, 1) both; }
 @keyframes pop {

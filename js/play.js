@@ -284,7 +284,7 @@ function paintLobby() {
       '<div style="font-size:42px;line-height:1">' + id.emoji + '</div>' +
       '<h1 class="h-display" style="margin-top:.4rem" data-i18n="lobby.in">You are in!</h1>' +
       '<div style="margin:.7rem 0 .2rem">' +
-        '<span class="chip chip--solid" style="--chip:' + id.color + '">' +
+        '<span class="chip chip--solid chip--text" style="--chip:' + id.color + '">' +
           '<span class="chip__name">' + escapeHtml(mine.name) + '</span></span>' +
       '</div>' +
       '<p class="lead" style="margin-top:.8rem" data-i18n="lobby.wait"></p>' +

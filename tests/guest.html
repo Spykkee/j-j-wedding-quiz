@@ -136,7 +136,7 @@ ok('a locked city cannot be picked',
 app.querySelector('#go').click();
 await settle();
 ok('joining without a city is refused', !(await store.read('teams/' + me)) &&
-   /city/i.test(app.querySelector('#err').textContent), app.querySelector('#err').textContent);
+   /table/i.test(app.querySelector('#err').textContent), app.querySelector('#err').textContent);
 app.querySelector('[data-emoji="🇰🇷"]').click();
 ok('picked city is marked', app.querySelector('[data-emoji="🇰🇷"]').classList.contains('is-on'));
 app.querySelector('#go').click();
