@@ -26,7 +26,7 @@ const consolePane = document.getElementById('console');
 
 export const ctx = {
   store,
-  db: { state: null, teams: {}, answers: {}, adjust: {}, quiz: null },
+  db: { state: null, teams: {}, answers: {}, adjust: {}, claims: {}, quiz: null },
   quiz: newQuiz(),          // working copy, may be ahead of what is published
   dirty: false,
   loaded: false,
@@ -172,6 +172,7 @@ function watchEverything() {
   store.watch('teams', (v) => { ctx.db.teams = v || {}; refresh('game'); });
   store.watch('answers', (v) => { ctx.db.answers = v || {}; refresh('game'); });
   store.watch('adjust', (v) => { ctx.db.adjust = v || {}; refresh('game'); });
+  store.watch('claims', (v) => { ctx.db.claims = v || {}; refresh('game'); });
 
   store.onConnection((ok) => {
     if (!ok && store.mode === 'firebase') toast('Lost connection — reconnecting…', 'bad');
@@ -206,7 +207,14 @@ export function refresh(reason) {
       if (activeTab === 'build') {
         if (now !== 'game') renderBuild(ctx);
       } else if (activeTab === 'tables') {
-        renderTables(ctx);
+        /* Redrawing would snap shut a city dropdown someone is choosing in;
+           wait until they leave it. */
+        const el = document.activeElement;
+        if (el && el.tagName === 'SELECT' && ctx.panes.tables.contains(el)) {
+          el.addEventListener('blur', () => refresh('game'), { once: true });
+        } else {
+          renderTables(ctx);
+        }
       } else {
         renderRun(ctx);
       }

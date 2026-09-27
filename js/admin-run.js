@@ -12,7 +12,7 @@ import {
   questionAt, roundAt, nextPosition, prevPosition, answerKey, grade, pick,
   computeScores, leaderboard, countQuestions
 } from './model.js';
-import { identity, escapeHtml, toast, ring, ringMarkup } from './ui.js';
+import { identity, escapeHtml, toast, ring, ringMarkup, TEAM_FLAGS } from './ui.js';
 
 const LETTERS = 'ABCDEFGH';
 let wiredRun = null;
@@ -225,7 +225,10 @@ function answersMarkup(ctx, s, question, r, q) {
 
     (missing.length
       ? '<div class="fine" style="margin-top:.7rem">Nothing yet from: ' +
-        missing.map((id) => escapeHtml((ctx.db.teams[id] || {}).name || '—')).join(', ') + '</div>'
+        missing.map((id) => {
+          const team = ctx.db.teams[id] || {};
+          return identity(id, team).emoji + ' ' + escapeHtml(team.name || '—');
+        }).join(', ') + '</div>'
       : '') +
   '</section>';
 }
@@ -522,7 +525,7 @@ export function renderTables(ctx) {
       '<div class="row" style="margin-bottom:.8rem">' +
         '<div class="h-section" style="margin:0">Tables playing</div>' +
         '<div class="spacer"></div>' +
-        '<span class="fine tnum">' + rows.length + '</span>' +
+        '<span class="fine tnum">' + rows.length + ' / ' + TEAM_FLAGS.length + '</span>' +
       '</div>' +
       (rows.length
         ? rows.map((row) => {
@@ -535,13 +538,13 @@ export function renderTables(ctx) {
               '<span class="teamrow__score">' + row.score + '</span>' +
               '<button class="iconbtn" data-act="plus" data-id="' + escapeHtml(row.id) + '" ' +
                 'title="Give a point">+</button>' +
-              '<button class="iconbtn" data-act="rename" data-id="' + escapeHtml(row.id) + '" ' +
-                'title="Rename">✎</button>' +
+              citySelect(ctx, row.id) +
               '<button class="iconbtn iconbtn--danger" data-act="kick" data-id="' +
                 escapeHtml(row.id) + '" title="Remove table">✕</button>' +
             '</div>';
           }).join('')
         : '<div class="empty"><span class="empty__mark">✦</span>Nobody has joined yet.</div>') +
+      freeCitiesMarkup(ctx) +
     '</section>' +
 
     '<section class="panel panel--quiet">' +
@@ -559,6 +562,74 @@ export function renderTables(ctx) {
   if (wiredTables !== pane) {
     wiredTables = pane;
     pane.addEventListener('click', (e) => onTablesClick(ctx, e));
+    pane.addEventListener('change', (e) => {
+      const sel = e.target.closest('select[data-act="city"]');
+      if (sel) moveCity(ctx, sel.getAttribute('data-id'), sel.value);
+    });
+  }
+}
+
+/* Every table is a city, so the name is not typed — it follows the city. The
+   dropdown lets the couple move a table that tapped the wrong one; cities
+   held by another table are greyed out, as they are on the phones. */
+function heldBy(ctx) {
+  const held = {};
+  Object.entries(ctx.db.claims || {}).forEach(([flag, uid]) => { held[flag] = uid; });
+  Object.entries(ctx.db.teams).forEach(([id, team]) => {
+    if (team && team.emoji && !held[team.emoji]) held[team.emoji] = id;
+  });
+  return held;
+}
+
+function citySelect(ctx, id) {
+  const team = ctx.db.teams[id] || {};
+  const held = heldBy(ctx);
+  const known = TEAM_FLAGS.some((f) => f.flag === team.emoji);
+  /* An invisible native select over a ✎ button: the row keeps its shape and
+     the phone opens its own list. */
+  return '<label class="iconbtn iconbtn--select" title="Move this table to another city">✎' +
+    '<select data-act="city" data-id="' + escapeHtml(id) + '" aria-label="City">' +
+    (known ? '' : '<option value="" selected>' + escapeHtml(team.name || '—') + ' (no city)</option>') +
+    TEAM_FLAGS.map((f) => {
+      const mine = f.flag === team.emoji;
+      const other = held[f.flag] && held[f.flag] !== id;
+      return '<option value="' + f.flag + '"' + (mine ? ' selected' : '') + (other ? ' disabled' : '') + '>' +
+        escapeHtml(f.city) + (other ? ' — taken' : '') + '</option>';
+    }).join('') +
+  '</select></label>';
+}
+
+function freeCitiesMarkup(ctx) {
+  const held = heldBy(ctx);
+  const free = TEAM_FLAGS.filter((f) => !held[f.flag]);
+  return '<div class="fine" style="margin-top:.7rem">' +
+    (free.length
+      ? 'Still free: ' + free.map((f) => f.flag + ' ' + escapeHtml(f.city)).join(', ')
+      : 'Every city is taken.') +
+  '</div>';
+}
+
+/* Claim the new city for the table, move the team onto it, then give back
+   whatever it held before. */
+async function moveCity(ctx, id, flag) {
+  const f = TEAM_FLAGS.find((x) => x.flag === flag);
+  if (!f || !ctx.db.teams[id]) return;
+  try {
+    const claims = (await ctx.store.read('claims')) || {};
+    if (claims[flag] && claims[flag] !== id) {
+      toast(f.city + ' was just taken by another table.', 'bad');
+      return ctx.refresh('game');
+    }
+    await ctx.store.write('claims/' + flag, id);
+    await ctx.store.merge('teams/' + id, { name: f.city, emoji: flag });
+    await Promise.all(Object.keys(claims)
+      .filter((k) => k !== flag && claims[k] === id)
+      .map((k) => ctx.store.erase('claims/' + k)));
+    toast('Moved to ' + f.city, 'good');
+  } catch (err) {
+    console.error('[quiz] move city failed', err);
+    toast('That did not go through: ' + ((err && err.code) || 'unknown error'), 'bad');
+    ctx.refresh('game');
   }
 }
 
@@ -615,17 +686,6 @@ async function onTablesClick(ctx, e) {
       case 'minus': {
         const current = Number((ctx.db.adjust || {})[id]) || 0;
         await ctx.store.write('adjust/' + id, current + (act === 'plus' ? 1 : -1));
-        return;
-      }
-
-      case 'rename': {
-        const team = ctx.db.teams[id];
-        if (!team) return;
-        const next = window.prompt('Rename this table:', team.name || '');
-        if (next == null) return;
-        const name = next.trim().replace(/\s+/g, ' ');
-        if (!name) return toast('A table needs a name.', 'bad');
-        await ctx.store.merge('teams/' + id, { name: name });
         return;
       }
 

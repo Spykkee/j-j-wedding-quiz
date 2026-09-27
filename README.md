@@ -1,14 +1,14 @@
 # J & J Wedding Quiz
 
-A live dinner quiz for the wedding. Guests scan a QR code at their table, type a
-team name, and answer on their phones. No login, no app, no accounts for anyone
+A live dinner quiz for the wedding. Guests scan a QR code at their table, pick
+their table's city, and answer on their phones. No login, no app, no accounts for anyone
 but the two of you.
 
 Three pages:
 
 | Page | Who opens it | What it does |
 | --- | --- | --- |
-| `index.html` | guests, by scanning the QR | join with a team name, then answer |
+| `index.html` | guests, by scanning the QR | pick the table's city, then answer |
 | `host.html` | the laptop driving the projector | the big screen — QR, questions, timer, leaderboard |
 | `admin.html` | you | build the quiz, then drive the evening |
 
@@ -147,9 +147,15 @@ itself the moment its clock runs out (as long as this console is open); if you
 close answers early, or the question has no timer, press it yourself, even if
 you have already read the answer out.
 
-The **Tables** pane has the join link and QR code to print on table cards, lets
-you rename or remove a table, nudge anyone's score by a point, and clear
+The **Tables** pane has the join link and QR code to print on table cards, lists
+the cities still free, lets you move a table to another city (✎) or remove it
+(✕, which frees its city), nudge anyone's score by a point, and clear
 everything between the rehearsal and the real thing.
+
+Each table is a city — Sydney, Innsbruck, Paris, Seoul, Kiruna, Barcelona,
+Copenhagen, Den Haag, Zurich, Nova Scotia, Tokyo — and the city is the team
+name. A city belongs to the first table that picks it; the database refuses
+anyone else.
 
 ---
 

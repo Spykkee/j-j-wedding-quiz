@@ -61,6 +61,7 @@ store.watch('state', (v) => { ctx.db.state = v; });
 store.watch('teams', (v) => { ctx.db.teams = v || {}; });
 store.watch('answers', (v) => { ctx.db.answers = v || {}; });
 store.watch('adjust', (v) => { ctx.db.adjust = v || {}; });
+store.watch('claims', (v) => { ctx.db.claims = v || {}; });
 
 await store.write('quiz', quiz);
 await store.write('state', { phase: 'lobby', r: 0, q: 0, open: false });
@@ -183,6 +184,30 @@ await tick(); await tick();
 ok('adjust +1 applied', (ctx.db.adjust || {}).t2 === 1, JSON.stringify(ctx.db.adjust));
 totals = computeScores(ctx.db.teams, ctx.db.answers, ctx.db.adjust);
 ok('adjust reaches the total', totals.t2 === 3, JSON.stringify(totals));
+
+/* ---- tables are cities: move one from the Tables pane ------------------ */
+await store.merge('teams/t1', { name: 'Paris', emoji: '🇫🇷' });
+await store.write('claims/🇫🇷', 't1');
+await tick();
+renderTables(ctx);
+ok('no free-text rename any more', !ctx.panes.tables.querySelector('[data-act="rename"]'));
+const citySel = ctx.panes.tables.querySelector('select[data-act="city"][data-id="t2"]');
+ok('each table has a city dropdown', !!citySel);
+ok('a city held by another table is disabled there',
+   citySel.querySelector('option[value="🇫🇷"]').disabled === true);
+ok('free cities are listed', /Still free:/.test(ctx.panes.tables.textContent) &&
+   !/Still free:[^]*Paris/.test(ctx.panes.tables.textContent));
+citySel.value = '🇯🇵';
+citySel.dispatchEvent(new Event('change', { bubbles: true }));
+await new Promise((r) => setTimeout(r, 30));
+ok('moving a table renames it to the city', ctx.db.teams.t2.name === 'Tokyo' &&
+   ctx.db.teams.t2.emoji === '🇯🇵', JSON.stringify(ctx.db.teams.t2));
+ok('the new city is claimed for it', ctx.db.claims['🇯🇵'] === 't2', JSON.stringify(ctx.db.claims));
+citySel.value = '🇨🇭';
+citySel.dispatchEvent(new Event('change', { bubbles: true }));
+await new Promise((r) => setTimeout(r, 30));
+ok('moving again gives the old city back', !ctx.db.claims['🇯🇵'] && ctx.db.claims['🇨🇭'] === 't2',
+   JSON.stringify(ctx.db.claims));
 
 /* ---- prev walks backwards across a round boundary --------------------- */
 await store.write('state', { phase: 'question', r: 1, q: 0, open: false });

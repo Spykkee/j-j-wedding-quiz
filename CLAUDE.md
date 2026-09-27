@@ -96,7 +96,7 @@ JJQ_ADMIN_PW="…" node tests/live-rules.mjs            # re-prove the boundarie
 ```sh
 python -m http.server 8765
 # then open:
-#   http://localhost:8765/tests/game.html    39 checks, admin + game loop
+#   http://localhost:8765/tests/game.html    46 checks, admin + game loop
 #   http://localhost:8765/tests/guest.html   29 checks, guest page
 node tests/live-rules.mjs                  # 31 checks, live rules (needs the pw)
 ```
@@ -123,7 +123,7 @@ machine; the bundled headless shell above works.)
 - British spelling in code comments (`normalise`, `colour` in prose) but
   American in CSS properties obviously.
 - Escape anything user-authored with `escapeHtml` before putting it in
-  `innerHTML` — team names come from guests.
+  `innerHTML` — anything stored under a team can be written by a guest.
 - The palette is inherited from `../j-j-wedding/css/styles.css`. Don't invent
   new hues; extend from `--burg`, `--gold`, `--blue`, and the team colours in
   `ui.js`.
