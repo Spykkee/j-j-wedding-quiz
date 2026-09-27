@@ -142,7 +142,9 @@ Underneath it is a row of escape hatches — Previous, Next, Reopen answers,
 Reveal, Round scores, Final scores, Lobby, End quiz — so you can jump anywhere if
 the evening does not go to plan.
 
-**Reveal** is what scores the automatic questions, so always press it, even if
+**Reveal** is what scores the automatic questions. A timed question reveals
+itself the moment its clock runs out (as long as this console is open); if you
+close answers early, or the question has no timer, press it yourself, even if
 you have already read the answer out.
 
 The **Tables** pane has the join link and QR code to print on table cards, lets
