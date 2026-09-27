@@ -256,6 +256,42 @@
   line-height: 1.25;
   margin-bottom: 10px;
 }
+.console__clock .ring__label { font-size: 19px; }
+
+/* Every multiple-choice option, the right one in green, picks counted live. */
+.crib {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 6px;
+  margin-bottom: .8rem;
+}
+.crib__opt {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 10px 6px 7px;
+  border: var(--line);
+  border-radius: 11px;
+  background: var(--surface);
+}
+.crib__key {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: var(--line);
+  font-size: 12px;
+  font-weight: 400;
+}
+.crib__text { flex: 1; min-width: 0; font-size: 14.5px; line-height: 1.3; overflow-wrap: anywhere; }
+.crib__count { font-size: 12.5px; color: var(--muted); }
+.crib__opt.is-correct { border-color: var(--good); background: var(--good-pale); }
+.crib__opt.is-correct .crib__key { background: var(--good); border-color: var(--good); color: #fff; }
+.crib__opt.is-correct .crib__text { font-weight: 400; }
+
 .console__prompt--none { color: var(--muted); font-style: italic; font-family: var(--sans); font-size: 15px; }
 .console__actions { display: flex; gap: 7px; flex-wrap: wrap; }
 .console__actions .btn { flex: 1 1 auto; min-width: 116px; }

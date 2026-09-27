@@ -212,6 +212,7 @@ await tick();
 maybeAutoClose(ctx);
 await tick(); await tick();
 ok('expired question auto-closes', ctx.db.state.open === false, JSON.stringify(ctx.db.state));
+ok('expired question auto-reveals', ctx.db.state.phase === 'reveal', JSON.stringify(ctx.db.state));
 
 await store.write('state', { phase: 'question', r: 0, q: 0, open: true,
   startedAt: Date.now(), endsAt: Date.now() + 60000 });

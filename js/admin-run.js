@@ -12,11 +12,12 @@ import {
   questionAt, roundAt, nextPosition, prevPosition, answerKey, grade, pick,
   computeScores, leaderboard, countQuestions
 } from './model.js';
-import { identity, escapeHtml, toast } from './ui.js';
+import { identity, escapeHtml, toast, ring, ringMarkup } from './ui.js';
 
 const LETTERS = 'ABCDEFGH';
 let wiredRun = null;
 let wiredTables = null;
+let stopClock = null;
 
 /* ================================================================= run pane */
 
@@ -46,6 +47,8 @@ export function renderRun(ctx) {
     answersMarkup(ctx, s, question, r, q) +
     standingsMarkup(ctx);
 
+  startClock(ctx, s);
+
   if (wiredRun !== pane) {
     wiredRun = pane;
     pane.addEventListener('click', (e) => onRunClick(ctx, e));
@@ -67,7 +70,10 @@ function consoleMarkup(ctx, s, round, question, r, q) {
             (question ? ' · Q' + (q + 1) + '/' + round.questions.length : '') + '</span>'
           : '') +
       '</div>' +
-      '<span class="fine tnum">' + answered + ' / ' + teams + ' answered</span>' +
+      '<div class="row row--tight">' +
+        '<span class="fine tnum">' + answered + ' / ' + teams + ' answered</span>' +
+        clockMarkup(s) +
+      '</div>' +
     '</div>' +
 
     '<div class="meterbar"><div class="meterbar__fill" style="width:' +
@@ -75,7 +81,7 @@ function consoleMarkup(ctx, s, round, question, r, q) {
 
     (question
       ? '<div class="console__prompt">' + escapeHtml(question.prompt.en || '(no question text)') + '</div>' +
-        answerCrib(question)
+        answerCrib(question, currentAnswers(ctx, r, q))
       : '<div class="console__prompt console__prompt--none">' +
           (phase === 'lobby' ? 'Waiting in the lobby — guests can join.'
             : phase === 'ended' ? 'The quiz is finished.'
@@ -112,13 +118,48 @@ function phaseLabel(phase, s) {
   return 'Lobby';
 }
 
-/* What the couple sees on their own screen so they can read the answer out. */
-function answerCrib(question) {
+/* The same countdown the phones and the big screen show. Every screen measures
+   state.endsAt against the server-corrected clock, so they all hit zero
+   together. Only drawn while answers are open — "Closed" in the phase pill
+   already covers the rest. */
+function clockMarkup(s) {
+  if (s.phase !== 'question' || !s.open) return '';
+  if (!s.endsAt || !s.startedAt) return '<span class="fine">No time limit</span>';
+  return '<span class="console__clock ring-wrap">' + ringMarkup(52) +
+    '<span class="ring__label">–</span></span>';
+}
+
+/* The pane is repainted on every answer that comes in, so the old ring is
+   stopped and a new one picks up from the same deadline — no visible jump. */
+function startClock(ctx, s) {
+  if (stopClock) { stopClock(); stopClock = null; }
+  const svg = ctx.panes.run.querySelector('.console__clock .ring');
+  if (!svg) return;
+  stopClock = ring(svg, {
+    start: s.startedAt,
+    deadline: s.endsAt,
+    now: () => ctx.store.now()
+  });
+}
+
+/* What the couple sees on their own screen so they can read the answer out —
+   and, for multiple choice, every option with how many tables are on it, so
+   they can nudge a table that is wavering. */
+function answerCrib(question, here) {
   if (question.type === 'mc') {
-    const i = question.options.findIndex((o) => o.id === question.correct);
-    const o = question.options[i];
-    return '<div class="fine" style="margin-bottom:.7rem">Correct: <strong>' +
-      (LETTERS[i] || (i + 1)) + ' · ' + escapeHtml(pick(o && o.text, 'en')) + '</strong></div>';
+    const picks = {};
+    Object.values(here || {}).forEach((a) => {
+      if (a && a.value != null) picks[a.value] = (picks[a.value] || 0) + 1;
+    });
+    return '<div class="crib">' + (question.options || []).map((o, i) => {
+      const right = o.id === question.correct;
+      const n = picks[o.id] || 0;
+      return '<div class="crib__opt' + (right ? ' is-correct' : '') + '">' +
+        '<span class="crib__key">' + (right ? '✓' : (LETTERS[i] || (i + 1))) + '</span>' +
+        '<span class="crib__text">' + escapeHtml(pick(o.text, 'en') || '(no text)') + '</span>' +
+        '<span class="crib__count tnum" title="Tables on this option">' + n + '</span>' +
+      '</div>';
+    }).join('') + '</div>';
   }
   if (question.type === 'exact') {
     return '<div class="fine" style="margin-bottom:.7rem">Accepts: <strong>' +
@@ -306,8 +347,11 @@ function showQuestion(ctx, r, q) {
 
 /* When a timed question runs out, close it here rather than trusting every
    phone to stop on its own — the database rules only accept answers while
-   state.open is true, so this is what actually shuts the door. Called on a
-   short interval by admin.js. */
+   state.open is true, so this is what actually shuts the door — and then
+   reveal the answer straight away. Closing first means no answer can slip in
+   between grading and the reveal. Closing early by hand does not auto-reveal:
+   that leaves endsAt in the past but open false, so it never reaches here.
+   Called on a short interval by admin.js. */
 let autoClosing = false;
 
 export function maybeAutoClose(ctx) {
@@ -317,6 +361,12 @@ export function maybeAutoClose(ctx) {
   if (autoClosing) return;
   autoClosing = true;
   ctx.store.merge('state', { open: false })
+    .then(() => {
+      /* The watcher may not have delivered the close yet; reveal from the
+         same position the timer ran out on. */
+      ctx.db.state = Object.assign({}, s, { open: false });
+      return doReveal(ctx);
+    })
     .catch((e) => console.error('[quiz] auto-close failed', e))
     .then(() => { autoClosing = false; });
 }
