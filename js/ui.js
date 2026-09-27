@@ -31,7 +31,7 @@ export const TEAM_EMOJI = [
   '💌', // love letter
   '🍷', // rosé, near enough
   '🫒', // olives
-  '🌻', // sunflowers
+  '🤍', // white heart
   '🍇'  // vines
 ];
 
