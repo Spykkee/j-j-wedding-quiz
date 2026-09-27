@@ -149,7 +149,7 @@ function paintJoin() {
   pickedEmoji = renameMode && myTeam() ? myTeam().emoji || null : null;
   show(app,
     '<section class="panel">' +
-      '<h1 class="h-display" data-i18n="join.h1">Pick your city</h1>' +
+      '<h1 class="h-display" data-i18n="join.h1">Pick your table</h1>' +
       '<p class="lead" style="margin-top:.6rem" data-i18n="join.lead"></p>' +
       '<div class="emoji-pick" id="emoji-pick" role="radiogroup" style="margin-top:1.3rem">' +
         TEAM_FLAGS.map((f) =>

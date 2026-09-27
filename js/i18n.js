@@ -30,7 +30,7 @@ const STR = {
     'brand.sub': '10 · 10 · 2026 · Provence',
 
     /* joining */
-    'join.h1': 'Pick your city',
+    'join.h1': 'Pick your table',
     'join.lead': 'One phone per table is plenty — gather round, pick your table’s city, and you are in.',
     'join.cta': 'Join the quiz',
     'join.joining': 'Joining…',
@@ -110,7 +110,7 @@ const STR = {
     'brand.title': 'Le Quiz de J & J',
     'brand.sub': '10 · 10 · 2026 · Provence',
 
-    'join.h1': 'Choisissez votre ville',
+    'join.h1': 'Choisissez votre table',
     'join.lead': 'Un téléphone par table suffit — rassemblez-vous, choisissez la ville de votre table, et c’est parti.',
     'join.cta': 'Rejoindre le quiz',
     'join.joining': 'Connexion…',
@@ -184,7 +184,7 @@ const STR = {
     'brand.title': 'J & J 퀴즈',
     'brand.sub': '2026 · 10 · 10 · 프로방스',
 
-    'join.h1': '도시를 골라 주세요',
+    'join.h1': '테이블을 골라 주세요',
     'join.lead': '테이블당 휴대폰 한 대면 충분해요. 다 같이 모여 우리 테이블 도시를 고르면 준비 완료입니다.',
     'join.cta': '퀴즈 참여하기',
     'join.joining': '참여하는 중…',
