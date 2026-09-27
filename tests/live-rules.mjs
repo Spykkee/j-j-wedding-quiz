@@ -32,7 +32,8 @@ async function idToken(body) {
     : 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + KEY;
   const r = await fetch(url, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    // The API key only accepts the site's own origins (restricted in Google Cloud).
+    headers: { 'content-type': 'application/json', referer: 'http://localhost:8765/' },
     body: JSON.stringify({ ...body, returnSecureToken: true })
   });
   const j = await r.json();
