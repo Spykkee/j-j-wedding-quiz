@@ -45,8 +45,9 @@
   --r-card: 18px;
   --r-pill: 999px;
 
-  /* 'Noto Color Emoji' is loaded with only the flag letters in it, so it draws
-     the table flags and nothing else. */
+  /* 'Noto Color Emoji' draws the table flags where the device cannot — see
+     js/flags.js. Loaded with only the flag letters in it, so it touches nothing
+     else; where it is not loaded (iPhone) the device's own flags are used. */
   --serif: 'Cormorant Garamond', 'Noto Color Emoji', Georgia, serif;
   --sans: 'Jost', 'Noto Sans KR', 'Noto Color Emoji', system-ui, sans-serif;
 }
