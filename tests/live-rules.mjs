@@ -79,9 +79,18 @@ ok('GUEST CANNOT WRITE ANOTHER TABLE\'S RECORD', !hijack.ok, 'status ' + hijack.
 const longName = await db('PUT', 'teams/' + guest.uid, guest.token,
   { name: 'x'.repeat(40), at: Date.now() });
 ok('over-long team name rejected', !longName.ok, 'status ' + longName.status);
-ok('guest saves its chosen flag',
+const unclaimed = await db('PUT', 'teams/' + guest.uid, guest.token,
+  { name: 'Paris', emoji: '🇫🇷', at: Date.now() });
+ok('GUEST CANNOT USE A CITY IT HAS NOT CLAIMED', !unclaimed.ok, 'status ' + unclaimed.status);
+ok('guest claims a free city',
+   (await db('PUT', 'claims/🇫🇷', guest.token, guest.uid)).ok);
+const steal = await db('PUT', 'claims/🇫🇷', guest2.token, guest2.uid);
+ok('GUEST CANNOT TAKE A CITY ANOTHER TABLE HOLDS', !steal.ok, 'status ' + steal.status);
+const release = await db('DELETE', 'claims/🇫🇷', guest2.token);
+ok('GUEST CANNOT FREE ANOTHER TABLE\'S CITY', !release.ok, 'status ' + release.status);
+ok('guest saves its claimed flag',
    (await db('PUT', 'teams/' + guest.uid, guest.token,
-     { name: 'Alpha', emoji: '🇫🇷', at: Date.now() })).ok);
+     { name: 'Paris', emoji: '🇫🇷', at: Date.now() })).ok);
 const longEmoji = await db('PUT', 'teams/' + guest.uid, guest.token,
   { name: 'Alpha', emoji: 'x'.repeat(20), at: Date.now() });
 ok('over-long emoji rejected', !longEmoji.ok, 'status ' + longEmoji.status);
@@ -137,7 +146,7 @@ ok('admin can remove all tables', (await db('DELETE', 'teams', admin.token)).ok)
 /* ---- tidy up ----------------------------------------------------------- */
 for (const p of ['quiz', 'pub', 'state']) await db('DELETE', p, admin.token);
 const leftovers = [];
-for (const p of ['quiz', 'pub', 'state', 'teams', 'answers', 'adjust']) {
+for (const p of ['quiz', 'pub', 'state', 'teams', 'claims', 'answers', 'adjust']) {
   const r = await db('GET', p, admin.token);
   if (r.body.trim() !== 'null') leftovers.push(p + '=' + r.body.trim().slice(0, 40));
 }

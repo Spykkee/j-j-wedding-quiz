@@ -115,7 +115,7 @@ ok('scores list both teams', /Alpha/.test(app.textContent) && /Bravo/.test(app.t
 /* a fresh guest with no team gets the join form */
 await store.erase('teams/' + me);
 await settle();
-ok('join form returns when the team is gone', !!app.querySelector('#name'),
+ok('join form returns when the team is gone', !!app.querySelector('#emoji-pick'),
    app.textContent.slice(0, 80));
 
 /* the city picker: eleven flags, another table's is held back */
@@ -125,7 +125,14 @@ const opts = [...app.querySelectorAll('.emoji-pick__opt')];
 ok('picker offers eleven cities', opts.length === 11, opts.length);
 ok('city held by another table is disabled',
    app.querySelector('[data-emoji="🇫🇷"]').disabled === true);
-app.querySelector('#name').value = 'Charlie';
+ok('there is no team name field any more', !app.querySelector('#name'));
+await store.write('claims/🇯🇵', 'someone-else');
+await settle();
+ok('a claimed city is locked for everyone else',
+   app.querySelector('[data-emoji="🇯🇵"]').disabled === true);
+app.querySelector('[data-emoji="🇯🇵"]').click();
+ok('a locked city cannot be picked',
+   !app.querySelector('[data-emoji="🇯🇵"]').classList.contains('is-on'));
 app.querySelector('#go').click();
 await settle();
 ok('joining without a city is refused', !(await store.read('teams/' + me)) &&
@@ -136,6 +143,8 @@ app.querySelector('#go').click();
 await settle();
 const joined = await store.read('teams/' + me);
 ok('team is saved with its flag', joined && joined.emoji === '🇰🇷', JSON.stringify(joined));
+ok('the city becomes the team name', joined && joined.name === 'Seoul', JSON.stringify(joined));
+ok('the city is claimed for this table', (await store.read('claims/🇰🇷')) === me);
 ok('the chosen flag shows on the scoreboard', /🇰🇷/.test(app.textContent));
 
 log(fails ? '\nRESULT: ' + fails + ' FAILURES' : '\nRESULT: all guest checks passed');

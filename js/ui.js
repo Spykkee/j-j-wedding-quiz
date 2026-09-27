@@ -3,8 +3,6 @@
    confetti burst and a toast. Nothing here knows about the quiz rules.
    --------------------------------------------------------------------------- */
 
-import { lang } from './i18n.js';
-
 /* Eight hues that all sit inside the wedding palette — burgundy and dusty blue
    are the originals, the rest are their neighbours. Every one of them stays
    legible with ivory text on top. */
@@ -66,30 +64,6 @@ export function escapeHtml(s) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
-}
-
-/* ------------------------------------------------------- team name suggest - */
-
-const NAMES = {
-  en: {
-    adj: ['Lavender', 'Golden', 'Midnight', 'Wandering', 'Velvet', 'Sunlit', 'Restless', 'Gentle', 'Rowdy', 'Marvellous'],
-    noun: ['Legends', 'Olives', 'Cicadas', 'Bottles', 'Swifts', 'Apricots', 'Mistrals', 'Corks', 'Figs', 'Boules']
-  },
-  fr: {
-    adj: ['Lavande', 'Dorés', 'Nocturnes', 'Vagabonds', 'Velours', 'Ensoleillés', 'Fringants', 'Tendres', 'Joyeux', 'Merveilleux'],
-    noun: ['Légendes', 'Olives', 'Cigales', 'Bouteilles', 'Martinets', 'Abricots', 'Mistrals', 'Bouchons', 'Figues', 'Boules']
-  },
-  ko: {
-    adj: ['라벤더', '황금', '한밤의', '떠도는', '벨벳', '햇살', '들썩이는', '다정한', '유쾌한', '멋진'],
-    noun: ['전설', '올리브', '매미', '와인병', '제비', '살구', '미스트랄', '코르크', '무화과', '공놀이']
-  }
-};
-
-export function suggestName() {
-  const set = NAMES[lang()] || NAMES.en;
-  const a = set.adj[Math.floor(Math.random() * set.adj.length)];
-  const n = set.noun[Math.floor(Math.random() * set.noun.length)];
-  return lang() === 'ko' ? a + ' ' + n : 'The ' + a + ' ' + n;
 }
 
 /* ------------------------------------------------------------ countdown ring */

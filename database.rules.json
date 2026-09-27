@@ -52,11 +52,23 @@
             "name": {
               ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 26"
             },
+            // The flag must be one this guest has claimed (see 'claims').
             "emoji": {
-              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 8"
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 8 && (auth.uid === 'nVysUWEmeiRNEPmUqD0KUnnR31T2' || root.child('rooms/' + $room + '/claims/' + newData.val()).val() === auth.uid)"
             },
             "at": { ".validate": "newData.isNumber()" },
             "$other": { ".validate": false }
+          }
+        },
+
+        // One city per table: claims/<flag> = the uid holding it. A guest can
+        // take a free city or give back their own, never take one that is held.
+        "claims": {
+          ".read": true,
+          ".write": "auth != null && auth.uid === 'nVysUWEmeiRNEPmUqD0KUnnR31T2'",
+          "$flag": {
+            ".write": "auth != null && (auth.uid === 'nVysUWEmeiRNEPmUqD0KUnnR31T2' || (!data.exists() && newData.val() === auth.uid) || (data.val() === auth.uid && !newData.exists()))",
+            ".validate": "newData.isString() && newData.val().length <= 128"
           }
         },
 

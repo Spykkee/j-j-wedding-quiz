@@ -10,13 +10,12 @@
    --------------------------------------------------------------------------- */
 
 import { openStore } from './store.js';
-import { MAX_TEAM_NAME } from './config.js';
 import { t, lang, apply as applyI18n, mountLangSwitch, points } from './i18n.js';
 import {
   pick, answerKey, leaderboard, computeScores, normaliseQuiz
 } from './model.js';
 import {
-  identity, escapeHtml, ring, ringMarkup, confetti, toast, show, suggestName, TEAM_EMOJI, TEAM_FLAGS
+  identity, escapeHtml, ring, ringMarkup, confetti, toast, show, TEAM_EMOJI, TEAM_FLAGS
 } from './ui.js';
 
 const store = openStore();
@@ -30,13 +29,14 @@ const db = {
   state: null,
   teams: {},
   answers: {},
-  adjust: {}
+  adjust: {},
+  claims: {}              // city flag -> the team holding it
 };
 
 let me = null;                 // my team id
 let joining = false;
 let renameMode = false;
-let pickedEmoji = null;        // the join form's emoji choice, kept across patches
+let pickedEmoji = null;        // the join form's city choice, kept across patches
 let sig = null;                // what is currently painted
 let stopRing = null;
 let lastVerdictShown = null;   // so confetti fires once per question
@@ -61,6 +61,7 @@ async function boot() {
   store.watch('teams', (v) => { db.teams = v || {}; render(); });
   store.watch('answers', (v) => { db.answers = v || {}; render(); });
   store.watch('adjust', (v) => { db.adjust = v || {}; render(); });
+  store.watch('claims', (v) => { db.claims = v || {}; render(); });
 
   store.onConnection((ok) => {
     if (!ok && store.mode === 'firebase') toast(t('ui.reconnecting'));
@@ -145,51 +146,28 @@ function paint() {
 /* ---------------------------------------------------------------------- join */
 
 function paintJoin() {
-  const existing = renameMode && myTeam() ? myTeam().name : '';
   pickedEmoji = renameMode && myTeam() ? myTeam().emoji || null : null;
   show(app,
     '<section class="panel">' +
-      '<h1 class="h-display" data-i18n="join.h1">Pick a team name</h1>' +
+      '<h1 class="h-display" data-i18n="join.h1">Pick your city</h1>' +
       '<p class="lead" style="margin-top:.6rem" data-i18n="join.lead"></p>' +
-      '<div style="margin-top:1.3rem">' +
-        '<label class="field">' +
-          '<span class="field__label" data-i18n="join.label">Your team name</span>' +
-          '<input id="name" class="input" type="text" autocomplete="off" ' +
-            'autocapitalize="words" enterkeyhint="go" maxlength="' + MAX_TEAM_NAME + '" ' +
-            'data-i18n-attr="placeholder:join.ph" value="' + escapeHtml(existing) + '">' +
-        '</label>' +
-        '<div class="field">' +
-          '<span class="field__label" data-i18n="join.emoji">Your table’s city</span>' +
-          '<div class="emoji-pick" id="emoji-pick" role="radiogroup">' +
-            TEAM_FLAGS.map((f) =>
-              '<button type="button" class="emoji-pick__opt" role="radio" data-emoji="' + f.flag + '">' +
-                '<span class="emoji-pick__flag">' + f.flag + '</span>' +
-                '<span class="emoji-pick__city">' + escapeHtml(f.city) + '</span></button>'
-            ).join('') +
-          '</div>' +
-        '</div>' +
-        '<div id="err" class="error" role="alert"></div>' +
-        '<div class="row" style="margin-top:1rem;gap:9px">' +
-          '<button id="go" class="btn btn--primary" style="flex:1" data-i18n="join.cta">Join the quiz</button>' +
-          '<button id="shuffle" class="btn btn--ghost btn--sm" type="button" data-i18n="join.shuffle">Surprise me</button>' +
-        '</div>' +
+      '<div class="emoji-pick" id="emoji-pick" role="radiogroup" style="margin-top:1.3rem">' +
+        TEAM_FLAGS.map((f) =>
+          '<button type="button" class="emoji-pick__opt" role="radio" data-emoji="' + f.flag + '">' +
+            '<span class="emoji-pick__flag">' + f.flag + '</span>' +
+            '<span class="emoji-pick__city">' + escapeHtml(f.city) + '</span></button>'
+        ).join('') +
       '</div>' +
+      '<div id="err" class="error" role="alert" style="margin-top:.8rem"></div>' +
+      '<button id="go" class="btn btn--primary btn--block" style="margin-top:1rem" data-i18n="join.cta">Join the quiz</button>' +
       (store.mode === 'offline'
         ? '<div style="margin-top:1rem"><span class="mode-flag" data-i18n="ui.offline"></span></div>'
         : '') +
     '</section>'
   );
 
-  const input = app.querySelector('#name');
   const go = app.querySelector('#go');
-
-  app.querySelector('#shuffle').addEventListener('click', () => {
-    input.value = suggestName();
-    input.focus();
-  });
   go.addEventListener('click', submitJoin);
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitJoin(); });
-  input.addEventListener('input', () => hideError());
   app.querySelector('#emoji-pick').addEventListener('click', (e) => {
     const btn = e.target.closest('.emoji-pick__opt');
     if (!btn || btn.disabled) return;
@@ -198,35 +176,56 @@ function paintJoin() {
     patchPicker();
   });
   patchPicker();
-  if (renameMode) input.focus();
 
+  /* Claim the city first, then write the team. The database only lets the
+     first claim on a city through, so two tables tapping Paris at the same
+     moment cannot both end up as Paris. */
   async function submitJoin() {
     if (joining) return;
-    const name = input.value.trim().replace(/\s+/g, ' ');
-    if (!name) return showError(t('join.err.empty'));
     if (phase() === 'ended') return showError(t('join.err.closed'));
-
-    const taken = Object.entries(db.teams).some(([id, team]) =>
-      id !== me && String(team && team.name || '').toLowerCase() === name.toLowerCase());
-    if (taken) return showError(t('join.err.taken'));
     if (!pickedEmoji) return showError(t('join.err.emoji'));
     if (emojiTaken().has(pickedEmoji)) return showError(t('join.err.emojiTaken'));
+
+    const flag = pickedEmoji;
+    const city = TEAM_FLAGS[TEAM_EMOJI.indexOf(flag)].city;
+    const prev = myTeam() ? myTeam().emoji : null;
+    const fresh = db.claims[flag] !== me;
 
     joining = true;
     go.disabled = true;
     go.textContent = t('join.joining');
     try {
-      await store.write('teams/' + me, { name, emoji: pickedEmoji, at: store.now() });
+      if (fresh) {
+        try {
+          const holder = await store.read('claims/' + flag);
+          if (holder && holder !== me) throw new Error('taken');
+          await store.write('claims/' + flag, me);
+        } catch (e) {
+          console.warn('[quiz] city already claimed', flag, e);
+          pickedEmoji = null;
+          patchPicker();
+          return showError(t('join.err.emojiTaken'));
+        }
+      }
+      try {
+        await store.write('teams/' + me, { name: city, emoji: flag, at: store.now() });
+      } catch (e) {
+        if (fresh) store.erase('claims/' + flag).catch(() => {});
+        throw e;
+      }
+      if (prev && prev !== flag) store.erase('claims/' + prev).catch(() => {});
       renameMode = false;
       sig = null;
       render();
     } catch (e) {
       console.error('[quiz] join failed', e);
       showError(t('join.err.failed'));
-      go.disabled = false;
-      go.textContent = t('join.cta');
     } finally {
       joining = false;
+      if (app.contains(go)) {
+        go.disabled = false;
+        go.textContent = t('join.cta');
+      }
     }
   }
 
@@ -241,17 +240,18 @@ function paintJoin() {
   }
 }
 
-/* Flags held by other tables. Once all eleven are gone (a rehearsal with more
-   phones than tables) nothing is held back, so nobody is ever locked out. */
+/* Cities locked by other tables — by claim, or by a team record that
+   predates claims. Mine stays open so I can keep it when changing. */
 function emojiTaken() {
   const held = new Set();
+  Object.entries(db.claims).forEach(([flag, uid]) => { if (uid !== me) held.add(flag); });
   Object.entries(db.teams).forEach(([id, team]) => {
     if (id !== me && team && TEAM_EMOJI.indexOf(team.emoji) !== -1) held.add(team.emoji);
   });
-  return held.size >= TEAM_EMOJI.length ? new Set() : held;
+  return held;
 }
 
-/* Patched in place as other tables join, so the half-typed name survives. */
+/* Patched in place as other tables join, so a choice in progress survives. */
 function patchPicker() {
   const box = app.querySelector('#emoji-pick');
   if (!box) return;
@@ -264,6 +264,11 @@ function patchPicker() {
     btn.classList.toggle('is-on', on);
     btn.setAttribute('aria-checked', on ? 'true' : 'false');
   });
+  const err = app.querySelector('#err');
+  if (err && TEAM_EMOJI.every((e) => held.has(e))) {
+    err.textContent = t('join.err.full');
+    err.classList.add('is-on');
+  }
 }
 
 /* --------------------------------------------------------------------- lobby */
@@ -277,7 +282,6 @@ function paintLobby() {
   show(app,
     '<section class="panel" style="text-align:center">' +
       '<div style="font-size:42px;line-height:1">' + id.emoji + '</div>' +
-      (id.city ? '<div class="fine" style="margin-top:.35rem">' + escapeHtml(id.city) + '</div>' : '') +
       '<h1 class="h-display" style="margin-top:.4rem" data-i18n="lobby.in">You are in!</h1>' +
       '<div style="margin:.7rem 0 .2rem">' +
         '<span class="chip chip--solid" style="--chip:' + id.color + '">' +

@@ -584,6 +584,14 @@ function drawQr(box, url) {
   });
 }
 
+/* A removed table's city goes back on the picker. */
+async function releaseClaims(ctx, id) {
+  const claims = (await ctx.store.read('claims')) || {};
+  await Promise.all(Object.keys(claims)
+    .filter((flag) => claims[flag] === id)
+    .map((flag) => ctx.store.erase('claims/' + flag)));
+}
+
 async function onTablesClick(ctx, e) {
   const node = e.target.closest('[data-act]');
   if (!node) return;
@@ -624,9 +632,10 @@ async function onTablesClick(ctx, e) {
       case 'kick': {
         const team = ctx.db.teams[id] || {};
         if (!confirm('Remove "' + (team.name || 'this table') + '"? Their answers stay in the ' +
-          'record but they drop off the leaderboard.')) return;
+          'record but they drop off the leaderboard, and their city is free to pick again.')) return;
         await ctx.store.erase('teams/' + id);
         await ctx.store.erase('adjust/' + id);
+        await releaseClaims(ctx, id);
         return;
       }
 
@@ -642,10 +651,11 @@ async function onTablesClick(ctx, e) {
 
       case 'clearAll': {
         if (!confirm('Clear the answers AND remove every table? Guests will have to scan and ' +
-          'pick a name again.')) return;
+          'pick their city again.')) return;
         await ctx.store.erase('answers');
         await ctx.store.erase('adjust');
         await ctx.store.erase('teams');
+        await ctx.store.erase('claims');
         await ctx.store.write('state', { phase: 'lobby', r: 0, q: 0, open: false });
         toast('Back to a blank room', 'good');
         return;
