@@ -118,6 +118,26 @@ await settle();
 ok('join form returns when the team is gone', !!app.querySelector('#name'),
    app.textContent.slice(0, 80));
 
+/* the emoji picker: eleven choices, another table's is held back */
+await store.merge('teams/other', { emoji: '💍' });
+await settle();
+const opts = [...app.querySelectorAll('.emoji-pick__opt')];
+ok('picker offers eleven emoji', opts.length === 11, opts.length);
+ok('emoji held by another table is disabled',
+   app.querySelector('[data-emoji="💍"]').disabled === true);
+app.querySelector('#name').value = 'Charlie';
+app.querySelector('#go').click();
+await settle();
+ok('joining without an emoji is refused', !(await store.read('teams/' + me)) &&
+   /emoji/i.test(app.querySelector('#err').textContent), app.querySelector('#err').textContent);
+app.querySelector('[data-emoji="🪻"]').click();
+ok('picked emoji is marked', app.querySelector('[data-emoji="🪻"]').classList.contains('is-on'));
+app.querySelector('#go').click();
+await settle();
+const joined = await store.read('teams/' + me);
+ok('team is saved with its emoji', joined && joined.emoji === '🪻', JSON.stringify(joined));
+ok('the chosen emoji shows on the scoreboard', /🪻/.test(app.textContent));
+
 log(fails ? '\nRESULT: ' + fails + ' FAILURES' : '\nRESULT: all guest checks passed');
 } catch (err) {
   log('\nRESULT: THREW ' + (err && err.stack ? err.stack : err));

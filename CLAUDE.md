@@ -42,7 +42,7 @@ rooms/<ROOM>/
   quiz     full quiz incl. answers      admin read+write only
   pub      stripped projection          world read, admin write
   state    { phase, r, q, open, startedAt, endsAt, scope, reveal }
-  teams/<uid>         { name, at }      own uid write; admin write
+  teams/<uid>         { name, emoji, at }  own uid write; admin write
   answers/<r>-<q>/<uid>  { name, value, at, pts?, state?, manual? }
   adjust/<uid>        manual +/- points admin only
 ```
@@ -95,9 +95,9 @@ JJQ_ADMIN_PW="…" node tests/live-rules.mjs            # re-prove the boundarie
 ```sh
 python -m http.server 8765
 # then open:
-#   http://localhost:8765/tests/game.html    38 checks, admin + game loop
-#   http://localhost:8765/tests/guest.html   18 checks, guest page
-node tests/live-rules.mjs                  # 25 checks, live rules (needs the pw)
+#   http://localhost:8765/tests/game.html    39 checks, admin + game loop
+#   http://localhost:8765/tests/guest.html   24 checks, guest page
+node tests/live-rules.mjs                  # 27 checks, live rules (needs the pw)
 ```
 
 The browser tests print `ok` / `FAIL` lines into a `<pre>`; they drive the real

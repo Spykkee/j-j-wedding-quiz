@@ -16,7 +16,7 @@ import {
   pick, answerKey, leaderboard, computeScores, normaliseQuiz
 } from './model.js';
 import {
-  identity, escapeHtml, ring, ringMarkup, confetti, toast, show, suggestName
+  identity, escapeHtml, ring, ringMarkup, confetti, toast, show, suggestName, TEAM_EMOJI
 } from './ui.js';
 
 const store = openStore();
@@ -36,6 +36,7 @@ const db = {
 let me = null;                 // my team id
 let joining = false;
 let renameMode = false;
+let pickedEmoji = null;        // the join form's emoji choice, kept across patches
 let sig = null;                // what is currently painted
 let stopRing = null;
 let lastVerdictShown = null;   // so confetti fires once per question
@@ -111,7 +112,10 @@ function signature() {
     a ? (a.state || 'sent') : 'none',
     a ? (a.pts == null ? '' : a.pts) : '',
     db.pub ? 'q' : 'noq',
-    lang()
+    lang(),
+    myTeam() && !renameMode && phase() === 'lobby'
+      ? Object.entries(db.teams).map(([id, tm]) => id + (tm && tm.name) + (tm && tm.emoji)).join()
+      : ''
   ].join('|');
 }
 
@@ -123,6 +127,7 @@ function render() {
     paint();
     applyI18n(app);
   }
+  patchPicker();
   patchStanding();
 }
 
@@ -141,6 +146,7 @@ function paint() {
 
 function paintJoin() {
   const existing = renameMode && myTeam() ? myTeam().name : '';
+  pickedEmoji = renameMode && myTeam() ? myTeam().emoji || null : null;
   show(app,
     '<section class="panel">' +
       '<h1 class="h-display" data-i18n="join.h1">Pick a team name</h1>' +
@@ -152,6 +158,15 @@ function paintJoin() {
             'autocapitalize="words" enterkeyhint="go" maxlength="' + MAX_TEAM_NAME + '" ' +
             'data-i18n-attr="placeholder:join.ph" value="' + escapeHtml(existing) + '">' +
         '</label>' +
+        '<div class="field">' +
+          '<span class="field__label" data-i18n="join.emoji">Your table’s emoji</span>' +
+          '<div class="emoji-pick" id="emoji-pick" role="radiogroup">' +
+            TEAM_EMOJI.map((e) =>
+              '<button type="button" class="emoji-pick__opt" role="radio" data-emoji="' + e + '">' +
+                e + '</button>'
+            ).join('') +
+          '</div>' +
+        '</div>' +
         '<div id="err" class="error" role="alert"></div>' +
         '<div class="row" style="margin-top:1rem;gap:9px">' +
           '<button id="go" class="btn btn--primary" style="flex:1" data-i18n="join.cta">Join the quiz</button>' +
@@ -174,6 +189,14 @@ function paintJoin() {
   go.addEventListener('click', submitJoin);
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitJoin(); });
   input.addEventListener('input', () => hideError());
+  app.querySelector('#emoji-pick').addEventListener('click', (e) => {
+    const btn = e.target.closest('.emoji-pick__opt');
+    if (!btn || btn.disabled) return;
+    pickedEmoji = btn.getAttribute('data-emoji');
+    hideError();
+    patchPicker();
+  });
+  patchPicker();
   if (renameMode) input.focus();
 
   async function submitJoin() {
@@ -185,12 +208,14 @@ function paintJoin() {
     const taken = Object.entries(db.teams).some(([id, team]) =>
       id !== me && String(team && team.name || '').toLowerCase() === name.toLowerCase());
     if (taken) return showError(t('join.err.taken'));
+    if (!pickedEmoji) return showError(t('join.err.emoji'));
+    if (emojiTaken().has(pickedEmoji)) return showError(t('join.err.emojiTaken'));
 
     joining = true;
     go.disabled = true;
     go.textContent = t('join.joining');
     try {
-      await store.write('teams/' + me, { name, at: store.now() });
+      await store.write('teams/' + me, { name, emoji: pickedEmoji, at: store.now() });
       renameMode = false;
       sig = null;
       render();
@@ -215,11 +240,36 @@ function paintJoin() {
   }
 }
 
+/* Emoji held by other tables. Once all eleven are gone (a rehearsal with more
+   phones than tables) nothing is held back, so nobody is ever locked out. */
+function emojiTaken() {
+  const held = new Set();
+  Object.entries(db.teams).forEach(([id, team]) => {
+    if (id !== me && team && TEAM_EMOJI.indexOf(team.emoji) !== -1) held.add(team.emoji);
+  });
+  return held.size >= TEAM_EMOJI.length ? new Set() : held;
+}
+
+/* Patched in place as other tables join, so the half-typed name survives. */
+function patchPicker() {
+  const box = app.querySelector('#emoji-pick');
+  if (!box) return;
+  const held = emojiTaken();
+  if (pickedEmoji && held.has(pickedEmoji)) pickedEmoji = null;
+  box.querySelectorAll('.emoji-pick__opt').forEach((btn) => {
+    const e = btn.getAttribute('data-emoji');
+    const on = e === pickedEmoji;
+    btn.disabled = held.has(e);
+    btn.classList.toggle('is-on', on);
+    btn.setAttribute('aria-checked', on ? 'true' : 'false');
+  });
+}
+
 /* --------------------------------------------------------------------- lobby */
 
 function paintLobby() {
   const mine = myTeam();
-  const id = identity(me);
+  const id = identity(me, db.teams[me]);
   const others = Object.entries(db.teams)
     .sort((a, b) => (a[1].at || 0) - (b[1].at || 0));
 
@@ -238,7 +288,7 @@ function paintLobby() {
       ? '<section class="panel panel--quiet">' +
           '<div class="h-section" data-i18n="lobby.teams"></div>' +
           '<div class="chip-cloud">' + others.map(([tid, team]) => {
-            const ident = identity(tid);
+            const ident = identity(tid, team);
             return '<span class="chip" style="--chip:' + ident.color + '">' +
               '<span class="chip__emoji">' + ident.emoji + '</span>' +
               '<span class="chip__name">' + escapeHtml(team.name) + '</span></span>';
@@ -478,7 +528,7 @@ function paintEnded() {
     '<section class="panel" style="text-align:center">' +
       '<div class="h-section" data-i18n="end.winner"></div>' +
       (winner
-        ? '<div style="font-size:40px;line-height:1.2">' + identity(winner.id).emoji + '</div>' +
+        ? '<div style="font-size:40px;line-height:1.2">' + identity(winner.id, db.teams[winner.id]).emoji + '</div>' +
           '<h1 class="h-display">' + escapeHtml(winner.name) + '</h1>' +
           '<p class="lead" style="margin-top:.3rem">' + escapeHtml(points(winner.score)) + '</p>'
         : '') +
@@ -493,7 +543,7 @@ function paintEnded() {
 function boardMarkup(rows) {
   if (!rows.length) return '<div class="empty" data-i18n="host.waiting"></div>';
   return '<div class="board">' + rows.map((row, i) => {
-    const id = identity(row.id);
+    const id = identity(row.id, db.teams[row.id]);
     const medal = row.place <= 3 ? ' board__row--' + row.place : '';
     return '<div class="board__row' + medal + (row.id === me ? ' board__row--you' : '') + '" ' +
       'style="animation-delay:' + Math.min(i * 45, 600) + 'ms">' +
@@ -537,7 +587,7 @@ function patchStanding() {
   const totals = computeScores(db.teams, db.answers, db.adjust);
   const rows = leaderboard(db.teams, totals);
   const row = rows.find((r) => r.id === me);
-  const id = identity(me);
+  const id = identity(me, db.teams[me]);
 
   document.getElementById('standing-team').innerHTML =
     '<span style="color:' + id.color + '">' + id.emoji + '</span> ' + escapeHtml(mine.name);

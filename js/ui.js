@@ -19,19 +19,32 @@ export const TEAM_COLORS = [
   '#A56A82'  // dusty rose
 ];
 
+/* One per table — eleven tables, eleven emoji, half wedding and half
+   Provence. Each table picks its own when it joins. */
 export const TEAM_EMOJI = [
-  '🍇', '🌿', '🐝', '🫒', '🌻', '🍷', '🥖', '🪻',
-  '🌰', '🦋', '🍑', '🧀', '🌾', '🕯️', '🍐', '🐞'
+  '🪻', // lavender
+  '💍', // rings
+  '🥂', // champagne
+  '💐', // bouquet
+  '🎂', // cake
+  '🕊️', // doves
+  '💌', // love letter
+  '🍷', // rosé, near enough
+  '🫒', // olives
+  '🌻', // sunflowers
+  '🍇'  // vines
 ];
 
-/* Same team, same colour and emoji everywhere — derived from the id rather
-   than stored, so the guest phone, the big screen and the admin list always
-   agree without an extra write. */
-export function identity(teamId) {
+/* Same team, same colour and emoji everywhere. The colour is derived from the
+   id; the emoji is the one the table picked (stored on the team), falling back
+   to a derived one for a team that joined before picking was a thing. Pass the
+   team record so the choice is honoured. */
+export function identity(teamId, team) {
   const h = hash(String(teamId || ''));
+  const chosen = team && TEAM_EMOJI.indexOf(team.emoji) !== -1 ? team.emoji : null;
   return {
     color: TEAM_COLORS[h % TEAM_COLORS.length],
-    emoji: TEAM_EMOJI[Math.floor(h / TEAM_COLORS.length) % TEAM_EMOJI.length]
+    emoji: chosen || TEAM_EMOJI[Math.floor(h / TEAM_COLORS.length) % TEAM_EMOJI.length]
   };
 }
 

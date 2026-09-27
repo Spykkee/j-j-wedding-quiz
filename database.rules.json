@@ -52,6 +52,9 @@
             "name": {
               ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 26"
             },
+            "emoji": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 8"
+            },
             "at": { ".validate": "newData.isNumber()" },
             "$other": { ".validate": false }
           }

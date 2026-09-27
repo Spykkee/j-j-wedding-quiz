@@ -232,7 +232,7 @@ function answersMarkup(ctx, s, question, r, q) {
 
 function judgeMarkup(ctx, question, id, a, r, q) {
   const team = ctx.db.teams[id] || {};
-  const ident = identity(id);
+  const ident = identity(id, team);
   const max = Number(question.points) || 0;
   const half = max >= 2 ? Math.floor(max / 2) : 0;
   const state = a.state || 'pending';
@@ -277,7 +277,7 @@ function standingsMarkup(ctx) {
   return '<section class="panel panel--quiet">' +
     '<div class="h-section">Standings</div>' +
     rows.map((row) => {
-      const ident = identity(row.id);
+      const ident = identity(row.id, ctx.db.teams[row.id]);
       return '<div class="teamrow">' +
         '<span class="board__place">' + row.place + '</span>' +
         '<span class="teamrow__emoji">' + ident.emoji + '</span>' +
@@ -526,7 +526,7 @@ export function renderTables(ctx) {
       '</div>' +
       (rows.length
         ? rows.map((row) => {
-            const ident = identity(row.id);
+            const ident = identity(row.id, ctx.db.teams[row.id]);
             return '<div class="teamrow">' +
               '<span class="teamrow__emoji">' + ident.emoji + '</span>' +
               '<span class="teamrow__name">' + escapeHtml(row.name) + '</span>' +

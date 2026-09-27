@@ -241,7 +241,7 @@ function paintReveal() {
       '<div class="reveal__who">' +
         (winners.length
           ? winners.map((w) => {
-              const id = identity(w.id);
+              const id = identity(w.id, db.teams[w.id]);
               return '<span class="joiner"><span>' + id.emoji + '</span>' +
                 '<span class="joiner__name">' + escapeHtml(w.name) + '</span></span>';
             }).join('') +
@@ -265,7 +265,7 @@ function paintScores() {
 }
 
 function hostRow(row, i) {
-  const id = identity(row.id);
+  const id = identity(row.id, db.teams[row.id]);
   const medal = row.place <= 3 ? ' hrow--' + row.place : '';
   return '<div class="hrow' + medal + '" style="animation-delay:' + Math.min(i * 70, 900) + 'ms">' +
     '<span class="hrow__place">' + row.place + '</span>' +
@@ -284,7 +284,7 @@ function paintEnded() {
     '<div class="finale">' +
       '<div class="finale__label" data-i18n="end.winner"></div>' +
       (winner
-        ? '<div style="font-size:clamp(34px,6vmin,78px)">' + identity(winner.id).emoji + '</div>' +
+        ? '<div style="font-size:clamp(34px,6vmin,78px)">' + identity(winner.id, db.teams[winner.id]).emoji + '</div>' +
           '<div class="finale__winner">' + escapeHtml(winner.name) + '</div>' +
           '<div class="finale__score">' + escapeHtml(points(winner.score)) + '</div>'
         : '<div class="finale__winner">—</div>') +
@@ -308,7 +308,7 @@ function patchLive() {
   if (joiners) {
     const teams = Object.entries(db.teams).sort((a, b) => (a[1].at || 0) - (b[1].at || 0));
     joiners.innerHTML = teams.map(([id, team]) => {
-      const ident = identity(id);
+      const ident = identity(id, team);
       return '<span class="joiner"><span>' + ident.emoji + '</span>' +
         '<span class="joiner__name">' + escapeHtml(team.name) + '</span></span>';
     }).join('');
