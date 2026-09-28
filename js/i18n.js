@@ -22,11 +22,11 @@ const LANG_CODE = { en: 'EN', fr: 'FR', ko: 'KR' };
 
 const STR = {
   en: {
-    'doc.join': 'J&J Wedding Quiz',
-    'doc.host': 'J&J Wedding Quiz — Big Screen',
-    'doc.admin': 'J&J Wedding Quiz — Admin',
+    'doc.join': 'J&J Quiz',
+    'doc.host': 'J&J Quiz — Big Screen',
+    'doc.admin': 'J&J Quiz — Admin',
 
-    'brand.title': 'The J & J Quiz',
+    'brand.title': 'J&J Quiz',
     'brand.sub': '10 · 10 · 2026 · Provence',
 
     /* joining */
@@ -103,11 +103,11 @@ const STR = {
   },
 
   fr: {
-    'doc.join': 'Quiz du mariage J&J',
-    'doc.host': 'Quiz du mariage J&J — Grand écran',
-    'doc.admin': 'Quiz du mariage J&J — Admin',
+    'doc.join': 'J&J Quiz',
+    'doc.host': 'J&J Quiz — Grand écran',
+    'doc.admin': 'J&J Quiz — Admin',
 
-    'brand.title': 'Le Quiz de J & J',
+    'brand.title': 'J&J Quiz',
     'brand.sub': '10 · 10 · 2026 · Provence',
 
     'join.h1': 'Choisissez votre table',
@@ -177,11 +177,11 @@ const STR = {
   },
 
   ko: {
-    'doc.join': 'J&J 결혼식 퀴즈',
-    'doc.host': 'J&J 결혼식 퀴즈 — 큰 화면',
-    'doc.admin': 'J&J 결혼식 퀴즈 — 관리자',
+    'doc.join': 'J&J Quiz',
+    'doc.host': 'J&J Quiz — 큰 화면',
+    'doc.admin': 'J&J Quiz — 관리자',
 
-    'brand.title': 'J & J 퀴즈',
+    'brand.title': 'J&J Quiz',
     'brand.sub': '2026 · 10 · 10 · 프로방스',
 
     'join.h1': '테이블을 골라 주세요',

@@ -89,7 +89,7 @@ export function newRound(n) {
 
 export function newQuiz() {
   return {
-    title: { en: 'J & J Wedding Quiz', fr: 'Quiz du mariage J & J', ko: 'J & J 결혼식 퀴즈' },
+    title: { en: 'J&J Quiz', fr: 'J&J Quiz', ko: 'J&J Quiz' },
     rounds: [newRound(1), newRound(2), newRound(3)]
   };
 }
@@ -99,7 +99,7 @@ export function newQuiz() {
 export function normaliseQuiz(raw) {
   const quiz = (raw && typeof raw === 'object') ? raw : {};
   const out = {
-    title: fixI18n(quiz.title, 'J & J Wedding Quiz'),
+    title: fixI18n(quiz.title, 'J&J Quiz'),
     rounds: []
   };
   const rounds = Array.isArray(quiz.rounds) ? quiz.rounds : [];
