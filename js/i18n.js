@@ -78,7 +78,7 @@ const STR = {
 
     /* end */
     'end.title': 'That is a wrap',
-    'end.thanks': 'Thank you for playing — now back to the dancing.',
+    'end.thanks': 'Thank you for playing!',
     'end.winner': 'Winning table',
 
     /* host screen */
@@ -154,7 +154,7 @@ const STR = {
     'scores.you': 'vous',
 
     'end.title': 'C’est terminé',
-    'end.thanks': 'Merci d’avoir joué — retour sur la piste de danse.',
+    'end.thanks': 'Merci d’avoir joué !',
     'end.winner': 'Table gagnante',
 
     'host.join': 'Scannez pour jouer',
@@ -228,7 +228,7 @@ const STR = {
     'scores.you': '우리 팀',
 
     'end.title': '퀴즈 끝!',
-    'end.thanks': '함께해 주셔서 고맙습니다 — 이제 다시 춤추러 가요.',
+    'end.thanks': '함께해 주셔서 고맙습니다!',
     'end.winner': '우승 테이블',
 
     'host.join': '스캔해서 참여',
