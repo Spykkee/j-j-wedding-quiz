@@ -156,7 +156,8 @@ function answerCrib(question, here) {
       const n = picks[o.id] || 0;
       return '<div class="crib__opt' + (right ? ' is-correct' : '') + '">' +
         '<span class="crib__key">' + (right ? '✓' : (LETTERS[i] || (i + 1))) + '</span>' +
-        '<span class="crib__text">' + escapeHtml(pick(o.text, 'en') || '(no text)') + '</span>' +
+        '<span class="crib__text">' + escapeHtml(pick(o.text, 'en') || '(no text)') +
+          (o.hidden ? ' <span class="fine">(hidden)</span>' : '') + '</span>' +
         '<span class="crib__count tnum" title="Tables on this option">' + n + '</span>' +
       '</div>';
     }).join('') + '</div>';

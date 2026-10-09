@@ -34,7 +34,11 @@ const quiz = normaliseQuiz({
     { type: 'mc', prompt: { en: 'Which wind blows through Provence?' }, points: 2, time: 0,
       options: [ { id: 'oa', text: { en: 'Sirocco' } }, { id: 'ob', text: { en: 'Mistral' } } ],
       correct: 'ob' },
-    { type: 'exact', prompt: { en: 'Name the river' }, points: 3, time: 0, accept: ['Rhone'] }
+    { type: 'exact', prompt: { en: 'Name the river' }, points: 3, time: 0, accept: ['Rhone'] },
+    { type: 'mc', prompt: { en: 'Who would survive without a phone?' }, points: 1, time: 30,
+      options: [ { id: 'hj', text: { en: 'Juhyun' } }, { id: 'hm', text: { en: 'Jimmy' } },
+                 { id: 'hn', text: { en: 'No one' }, hidden: true } ],
+      correct: 'hn' }
   ] }]
 });
 
@@ -45,7 +49,10 @@ await store.write('pub', {
     id: r.id, title: r.title, blurb: r.blurb,
     questions: r.questions.map((q) => {
       const o = { id: q.id, type: q.type, prompt: q.prompt, image: '', points: q.points, time: q.time };
-      if (q.type === 'mc') o.options = q.options.map((x) => ({ id: x.id, text: x.text }));
+      if (q.type === 'mc') {
+        o.options = q.options.map((x) =>
+          x.hidden ? { id: x.id, text: x.text, hidden: true } : { id: x.id, text: x.text });
+      }
       return o;
     })
   }))
@@ -106,6 +113,42 @@ await store.write('state', { phase: 'question', r: 0, q: 1, open: false });
 await settle();
 ok('input disabled when closed', app.querySelector('#answer').disabled === true);
 ok('closed notice shown', /Answers are closed/.test(app.textContent));
+
+/* a hidden option lurks until the last five seconds */
+const sneak = () => app.querySelector('.option--sneak');
+await store.write('state', { phase: 'question', r: 0, q: 2, open: true,
+  startedAt: Date.now(), endsAt: Date.now() + 30000 });
+await settle();
+ok('hidden option is in the page', !!sneak());
+ok('hidden option lurks early in the question', sneak() && sneak().classList.contains('is-lurking'));
+ok('visible options keep letters A and B',
+   [...app.querySelectorAll('.option__key')].map((k) => k.textContent).join() === 'A,B');
+await store.write('state', { phase: 'question', r: 0, q: 2, open: true,
+  startedAt: Date.now() - 26000, endsAt: Date.now() + 4000 });
+await settle();
+ok('hidden option appears in the last five seconds', sneak() && !sneak().classList.contains('is-lurking'));
+sneak().click();
+await settle();
+const a3 = await store.read('answers/0-2/' + me);
+ok('tapping the hidden option sends it', a3 && a3.value === 'hn', JSON.stringify(a3));
+ok('a picked hidden option stays visible', sneak() && sneak().classList.contains('is-picked') &&
+   !sneak().classList.contains('is-lurking'));
+
+await store.merge('answers/0-2/' + me, { state: 'correct', pts: 1 });
+await store.write('state', { phase: 'reveal', r: 0, q: 2, open: false,
+  reveal: { kind: 'mc', optionId: 'hn', text: 'No one' } });
+await settle();
+ok('hidden answer shown as right at the reveal',
+   /No one/.test((app.querySelector('.option.is-right') || {}).textContent || ''));
+
+/* reveal on a question whose hidden option was neither right nor picked */
+const pub2 = await store.read('pub');
+pub2.rounds[0].questions[0].options.push({ id: 'hx', text: { en: 'Secret' }, hidden: true });
+await store.write('pub', pub2);
+await store.write('state', { phase: 'reveal', r: 0, q: 0, open: false,
+  reveal: { kind: 'mc', optionId: 'ob', text: 'Mistral' } });
+await settle();
+ok('an unneeded hidden option stays hidden at the reveal', !/Secret/.test(app.textContent));
 
 /* scores screen lists both tables */
 await store.write('state', { phase: 'scores', r: 0, q: 1, open: false, scope: 'final' });

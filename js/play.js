@@ -356,20 +356,33 @@ function paintQuestion() {
       start: s.startedAt,
       deadline: s.endsAt,
       now: () => store.now(),
+      onTick: (secs) => { if (secs <= SNEAK_SECS) unlurk(); },
       onDone: () => { sig = null; render(); }
     });
+  } else {
+    unlurk();          // no clock, so no last five seconds to wait for
   }
 
   if (q.type === 'mc') wireOptions(q, open);
   else wireText(q, open);
 }
 
+/* A hidden option is the couple's practical joke: a small, faint line under the
+   real choices that only shows up once the ring turns red. It is a real option
+   — tapping it sends its id like any other — it is just easy to miss. Letters
+   skip it so A and B stay A and B. */
 function mcMarkup(q, mine, open) {
+  const keys = optionKeys(q);
   return '<div class="options">' + q.options.map((o, i) => {
     const picked = mine && mine.value === o.id;
+    if (o.hidden) {
+      return '<button class="option option--sneak' + (picked ? ' is-picked' : ' is-lurking') + '" ' +
+        'data-opt="' + escapeHtml(o.id) + '"' + (open ? '' : ' disabled') + '>' +
+        escapeHtml(pick(o.text, lang())) + '</button>';
+    }
     return '<button class="option' + (picked ? ' is-picked' : '') + '" ' +
       'data-opt="' + escapeHtml(o.id) + '"' + (open ? '' : ' disabled') + '>' +
-      '<span class="option__key">' + (LETTERS[i] || (i + 1)) + '</span>' +
+      '<span class="option__key">' + keys[i] + '</span>' +
       '<span class="option__text">' + escapeHtml(pick(o.text, lang())) + '</span>' +
       '</button>';
   }).join('') + '</div>' +
@@ -394,6 +407,22 @@ function textMarkup(q, mine, open) {
       ? '<p class="fine" style="margin-top:.8rem;text-align:center">' +
           t('play.sent') + (open ? ' · ' + t('play.sentNote') : '') + '</p>'
       : '');
+}
+
+const SNEAK_SECS = 5;
+
+function unlurk() {
+  app.querySelectorAll('.option--sneak.is-lurking').forEach((b) => b.classList.remove('is-lurking'));
+}
+
+/* Letters for the visible options; a hidden one gets a star instead. */
+function optionKeys(q) {
+  let n = 0;
+  return q.options.map((o) => {
+    if (o.hidden) return '✦';
+    n += 1;
+    return LETTERS[n - 1] || String(n);
+  });
 }
 
 function wireOptions(q, open) {
@@ -487,12 +516,15 @@ function paintReveal() {
 }
 
 function revealOptions(q, mine, reveal) {
+  const keys = optionKeys(q);
   return '<div class="options">' + q.options.map((o, i) => {
     const right = o.id === reveal.optionId;
     const mistaken = mine && mine.value === o.id && !right;
     const cls = right ? ' is-right' : (mistaken ? ' is-wrong' : ' is-dim');
+    /* A hidden option nobody needed to know about stays hidden. */
+    if (o.hidden && !right && !(mine && mine.value === o.id)) return '';
     return '<div class="option' + cls + '">' +
-      '<span class="option__key">' + (LETTERS[i] || (i + 1)) + '</span>' +
+      '<span class="option__key">' + keys[i] + '</span>' +
       '<span class="option__text">' + escapeHtml(pick(o.text, lang())) + '</span>' +
       '</div>';
   }).join('') + '</div>';

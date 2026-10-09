@@ -226,6 +226,19 @@ ok('typing updates the model', ctx.quiz.rounds[0].questions[0].prompt.en === 'Ed
    ctx.quiz.rounds[0].questions[0].prompt.en);
 ok('typing marks it dirty', ctx.dirty === true);
 
+const sneakBox = ctx.panes.build.querySelector('[data-act="hidden"][data-o="ob"]');
+ok('each option has a hidden toggle', !!sneakBox && sneakBox.checked === false);
+sneakBox.checked = true;
+sneakBox.dispatchEvent(new Event('change', { bubbles: true }));
+const hiddenOpt = ctx.quiz.rounds[0].questions[0].options[1];
+ok('ticking hidden marks the option', hiddenOpt.hidden === true, JSON.stringify(hiddenOpt));
+ok('a hidden option survives a save', normaliseQuiz(ctx.quiz).rounds[0].questions[0].options[1].hidden === true);
+sneakBox.checked = false;
+sneakBox.dispatchEvent(new Event('change', { bubbles: true }));
+ok('unticking drops the flag', !('hidden' in ctx.quiz.rounds[0].questions[0].options[1]));
+ok('no stray hidden flag on ordinary options',
+   !('hidden' in normaliseQuiz(ctx.quiz).rounds[0].questions[0].options[0]));
+
 const addBtn = ctx.panes.build.querySelector('[data-act="addQ"][data-type="exact"]');
 addBtn.click();
 ok('add question works', countQuestions(ctx.quiz) === 4, countQuestions(ctx.quiz));

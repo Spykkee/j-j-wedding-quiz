@@ -168,6 +168,12 @@ function mcEditor(q, r, qi) {
           (o.id === q.correct ? '✓' : (LETTERS[oi] || (oi + 1))) + '</button>' +
         '<div class="optrow__fields">' +
           langInputs('opt', o.text, { r: r, q: qi, o: o.id }, 'Option ' + (LETTERS[oi] || (oi + 1))) +
+          '<label class="row" style="gap:8px;cursor:pointer;margin-top:4px">' +
+            '<input type="checkbox" data-act="hidden" data-r="' + r + '" data-q="' + qi + '" ' +
+              'data-o="' + escapeHtml(o.id) + '"' + (o.hidden ? ' checked' : '') + '>' +
+            '<span class="fine">Hidden — off the big screen, and only appears faintly on ' +
+              'phones in the last 5 seconds</span>' +
+          '</label>' +
         '</div>' +
         '<button class="iconbtn iconbtn--danger" data-act="delOpt" data-r="' + r + '" ' +
           'data-q="' + qi + '" data-o="' + escapeHtml(o.id) + '" title="Remove option"' +
@@ -326,6 +332,16 @@ function onChange(ctx, e) {
   if (hit.act === 'fuzzy' && hit.question) {
     hit.question.fuzzy = hit.node.checked;
     ctx.markDirty();
+    return;
+  }
+
+  if (hit.act === 'hidden' && hit.question) {
+    const option = (hit.question.options || []).find((o) => o.id === hit.o);
+    if (option) {
+      if (hit.node.checked) option.hidden = true;
+      else delete option.hidden;
+      ctx.markDirty();
+    }
     return;
   }
 

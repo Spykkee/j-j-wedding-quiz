@@ -254,7 +254,12 @@ function projection(quiz) {
           points: q.points,
           time: q.time
         };
-        if (q.type === 'mc') out.options = q.options.map((o) => ({ id: o.id, text: o.text }));
+        /* 'hidden' only changes how an option is drawn, never whether it is
+           right, so it is safe to ship. */
+        if (q.type === 'mc') {
+          out.options = q.options.map((o) =>
+            o.hidden ? { id: o.id, text: o.text, hidden: true } : { id: o.id, text: o.text });
+        }
         return out;
       })
     }))

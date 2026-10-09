@@ -12,7 +12,8 @@
        image: '',                              // optional URL
        points: 1,
        time: 45,                               // seconds, 0 = untimed
-       options: [ { id, text:{en,fr,ko} } ],   // mc only
+       options: [ { id, text:{en,fr,ko},       // mc only
+                    hidden?: true } ],         // a sneaky extra, see play.js
        correct: 'optionId',                    // mc only
        accept: ['answer', 'other spelling'],   // exact only
        fuzzy: true,                            // exact only - tolerate typos
@@ -122,10 +123,11 @@ export function normaliseQuiz(raw) {
         time: clampInt(q && q.time, DEFAULT_TIME_LIMIT, 0, 900)
       };
       if (t === 'mc') {
-        const opts = (q && Array.isArray(q.options) ? q.options : []).map((o) => ({
-          id: (o && o.id) || uid('o'),
-          text: fixI18n(o && o.text, '')
-        }));
+        const opts = (q && Array.isArray(q.options) ? q.options : []).map((o) => {
+          const opt = { id: (o && o.id) || uid('o'), text: fixI18n(o && o.text, '') };
+          if (o && o.hidden === true) opt.hidden = true;
+          return opt;
+        });
         while (opts.length < 2) opts.push(newOption());
         item.options = opts;
         item.correct = opts.some((o) => o.id === (q && q.correct)) ? q.correct : opts[0].id;

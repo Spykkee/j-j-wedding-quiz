@@ -172,14 +172,17 @@ function paintQuestion() {
 
   const s = db.state || {};
   const showClock = !!(s.endsAt && s.startedAt);
+  const shown = q.type === 'mc' ? q.options.filter((o) => !o.hidden) : [];
 
   stage.innerHTML =
     '<div class="hq' + (showClock ? '' : ' hq--noclock') + '">' +
       '<div>' +
         '<div class="hq__prompt">' + escapeHtml(pick(q.prompt, lang())) + '</div>' +
         (q.image ? '<img class="hq__image" src="' + escapeHtml(q.image) + '" alt="">' : '') +
+        /* A hidden option never shows here while the question is open — the
+           whole room would see it. It turns up at the reveal if it was right. */
         (q.type === 'mc'
-          ? '<div class="hq__options" data-n="' + q.options.length + '">' + q.options.map((o, i) =>
+          ? '<div class="hq__options" data-n="' + shown.length + '">' + shown.map((o, i) =>
               '<div class="hopt">' +
                 '<span class="hopt__key">' + (LETTERS[i] || (i + 1)) + '</span>' +
                 '<span>' + escapeHtml(pick(o.text, lang())) + '</span>' +
@@ -208,6 +211,17 @@ function paintQuestion() {
 
 /* -------------------------------------------------------------------- reveal */
 
+/* The visible options keep their letters; a hidden one joins them, starred,
+   only when it is the answer. */
+function revealed(q, reveal) {
+  let n = 0;
+  return q.options.flatMap((o) => {
+    if (o.hidden) return o.id === reveal.optionId ? [{ o, key: '✦' }] : [];
+    n += 1;
+    return [{ o, key: LETTERS[n - 1] || String(n) }];
+  });
+}
+
 function paintReveal() {
   const q = currentQuestion();
   const reveal = (db.state && db.state.reveal) || {};
@@ -230,9 +244,9 @@ function paintReveal() {
             escapeHtml(pick(q && q.prompt, lang())) + '</div>'
         : '') +
       (q && q.type === 'mc'
-        ? '<div class="hq__options" style="margin-top:0">' + q.options.map((o, i) =>
+        ? '<div class="hq__options" style="margin-top:0">' + revealed(q, reveal).map(({ o, key }) =>
             '<div class="hopt' + (o.id === reveal.optionId ? ' is-right' : ' is-dim') + '">' +
-              '<span class="hopt__key">' + (LETTERS[i] || (i + 1)) + '</span>' +
+              '<span class="hopt__key">' + key + '</span>' +
               '<span>' + escapeHtml(pick(o.text, lang())) + '</span>' +
             '</div>').join('') + '</div>'
         : free
