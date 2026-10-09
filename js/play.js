@@ -135,6 +135,7 @@ function render() {
 function paint() {
   if (!myTeam() || renameMode) return paintJoin();
   switch (phase()) {
+    case 'ready':    return paintReady();
     case 'question': return paintQuestion();
     case 'reveal':   return paintReveal();
     case 'scores':   return paintScores();
@@ -308,6 +309,26 @@ function paintLobby() {
     sig = null;
     render();
   });
+}
+
+/* --------------------------------------------------------------- get ready */
+
+/* The round's title and intro, between rounds. This used to live only on the
+   big screen; with no projector in the room the phones have to carry it. */
+function paintReady() {
+  const round = currentRound();
+  if (!round) return paintLobby();
+  const blurb = pick(round.blurb, lang());
+
+  show(app,
+    '<section class="panel" style="text-align:center">' +
+      '<div class="qmeta__round">' + t('play.round') + ' ' + (pos().r + 1) + ' · ' +
+        escapeHtml(t('host.roundAhead')) + '</div>' +
+      '<h1 class="h-display" style="margin-top:.5rem">' + escapeHtml(pick(round.title, lang())) + '</h1>' +
+      (blurb ? '<p class="lead" style="margin-top:.8rem">' + escapeHtml(blurb) + '</p>' : '') +
+      '<p class="fine" style="margin-top:1.1rem" data-i18n="play.waitNext"></p>' +
+    '</section>'
+  );
 }
 
 /* ------------------------------------------------------------------ question */

@@ -30,7 +30,7 @@ const me = await store.signInGuest();
 
 const quiz = normaliseQuiz({
   title: { en: 'Test quiz' },
-  rounds: [{ title: { en: 'Round one' }, questions: [
+  rounds: [{ title: { en: 'Round one' }, blurb: { en: 'Just pick one.' }, questions: [
     { type: 'mc', prompt: { en: 'Which wind blows through Provence?' }, points: 2, time: 0,
       options: [ { id: 'oa', text: { en: 'Sirocco' } }, { id: 'ob', text: { en: 'Mistral' } } ],
       correct: 'ob' },
@@ -59,12 +59,18 @@ await store.write('pub', {
 });
 await store.write('teams/' + me, { name: 'Alpha', at: 1 });
 await store.write('teams/other', { name: 'Bravo', at: 2 });
-await store.write('state', { phase: 'question', r: 0, q: 0, open: true });
+await store.write('state', { phase: 'ready', r: 0, q: 0, open: false });
 
 await import('../js/play.js');
 await settle();
 
 const app = document.getElementById('app');
+ok('round intro shows the title', /Round one/.test(app.textContent), app.textContent.slice(0, 90));
+ok('round intro shows the blurb', /Just pick one\./.test(app.textContent));
+ok('round intro numbers the round', /Round 1/.test(app.textContent));
+
+await store.write('state', { phase: 'question', r: 0, q: 0, open: true });
+await settle();
 ok('question prompt shown', /Which wind blows/.test(app.textContent), app.textContent.slice(0, 90));
 ok('options rendered', app.querySelectorAll('.option').length === 2,
    app.querySelectorAll('.option').length);

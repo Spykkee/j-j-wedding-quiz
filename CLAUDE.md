@@ -97,7 +97,7 @@ JJQ_ADMIN_PW="…" node tests/live-rules.mjs            # re-prove the boundarie
 python -m http.server 8765
 # then open:
 #   http://localhost:8765/tests/game.html?offline=1    51 checks, admin + game loop
-#   http://localhost:8765/tests/guest.html?offline=1   37 checks, guest page
+#   http://localhost:8765/tests/guest.html?offline=1   40 checks, guest page
 node tests/live-rules.mjs                  # 31 checks, live rules (needs the pw)
 ```
 
