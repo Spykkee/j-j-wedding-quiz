@@ -82,6 +82,11 @@ function roundMarkup(ctx, round, r) {
             'leave the title empty to skip it</div>' +
           langInputs('ptitle', round.pause.title, { r: r }, 'e.g. Time for the cheese') +
           langInputs('ptext', round.pause.text, { r: r }, 'What guests read meanwhile', true) +
+          '<label class="field" style="margin-top:.4rem">' +
+            '<span class="field__label">Picture (optional) — a URL, or a file in img/</span>' +
+            '<input class="input input--sm" data-act="pimage" data-r="' + r + '" ' +
+              'value="' + escapeHtml(round.pause.image || '') + '" placeholder="img/pause-dessert.svg">' +
+          '</label>' +
         '</div>' +
       '</details>' +
 
@@ -294,6 +299,7 @@ function onInput(ctx, e) {
     case 'rblurb': if (hit.round) hit.round.blurb[hit.lang] = v; break;
     case 'ptitle': if (hit.round) hit.round.pause.title[hit.lang] = v; break;
     case 'ptext': if (hit.round) hit.round.pause.text[hit.lang] = v; break;
+    case 'pimage': if (hit.round) hit.round.pause.image = v.trim(); break;
     case 'prompt': if (hit.question) hit.question.prompt[hit.lang] = v; break;
     case 'image': if (hit.question) hit.question.image = v; break;
     case 'note': if (hit.question) hit.question.note = v; break;

@@ -726,3 +726,13 @@ body::before {
 .podium__step--1 .podium__block { height: 112px; background: var(--gold); }
 .podium__step--2 .podium__block { height: 80px; background: #C9C6BC; }
 .podium__step--3 .podium__block { height: 58px; background: #D6BBA6; }
+
+/* The picture on a break page: a watercolour of the next course. */
+.pause__image {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+  margin: .6rem auto .2rem;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+}

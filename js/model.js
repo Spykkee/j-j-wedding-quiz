@@ -4,7 +4,8 @@
    A quiz is plain JSON so it can be exported, edited by hand and re-imported:
 
      { title, rounds: [ { id, title:{en,fr,ko}, blurb:{...},
-                          pause: { title:{...}, text:{...} },  // break after it
+                          pause: { title:{...}, text:{...},    // break after it
+                                   image: '' },
                           questions: [ Question ] } ] }
 
      Question = {
@@ -85,7 +86,7 @@ export function newRound(n) {
     id: uid('r'),
     title: { en: 'Round ' + n, fr: 'Manche ' + n, ko: n + '라운드' },
     blurb: emptyI18n(),
-    pause: { title: emptyI18n(), text: emptyI18n() },
+    pause: { title: emptyI18n(), text: emptyI18n(), image: '' },
     questions: []
   };
 }
@@ -113,7 +114,8 @@ export function normaliseQuiz(raw) {
       blurb: fixI18n(r && r.blurb, ''),
       pause: {
         title: fixI18n(r && r.pause && r.pause.title, ''),
-        text: fixI18n(r && r.pause && r.pause.text, '')
+        text: fixI18n(r && r.pause && r.pause.text, ''),
+        image: (r && r.pause && typeof r.pause.image === 'string') ? r.pause.image : ''
       },
       questions: []
     };

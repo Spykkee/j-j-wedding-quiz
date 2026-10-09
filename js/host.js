@@ -171,6 +171,7 @@ function paintPause() {
   stage.innerHTML =
     '<div class="getready">' +
       '<div class="getready__round" data-i18n="pause.label"></div>' +
+      (pause.image ? '<img class="hq__image" src="' + escapeHtml(pause.image) + '" alt="">' : '') +
       '<div class="getready__title">' + escapeHtml(pick(pause.title, lang())) + '</div>' +
       (pick(pause.text, lang())
         ? '<div class="getready__blurb">' + escapeHtml(pick(pause.text, lang())) + '</div>'

@@ -237,6 +237,9 @@ ok('final scores lead to the last break', primaryAct() === 'pause', primaryAct()
 await click('pause');
 ok('the last break leads to the finish', primaryAct() === 'end', primaryAct());
 ok('a break survives a save', normaliseQuiz(ctx.quiz).rounds[0].pause.title.en === 'Cheese');
+ctx.quiz.rounds[0].pause.image = 'img/x.svg';
+ok('a break picture survives a save', normaliseQuiz(ctx.quiz).rounds[0].pause.image === 'img/x.svg');
+ctx.quiz.rounds[0].pause.image = '';
 ctx.quiz.rounds[0].pause.title.en = '';
 ctx.quiz.rounds[1].pause.title.en = '';
 

@@ -350,6 +350,9 @@ function paintPause() {
   show(app,
     '<section class="panel" style="text-align:center">' +
       '<div class="qmeta__round" data-i18n="pause.label"></div>' +
+      (round.pause.image
+        ? '<img class="pause__image" src="' + escapeHtml(round.pause.image) + '" alt="">'
+        : '') +
       '<h1 class="h-display" style="margin-top:.5rem">' + escapeHtml(pick(round.pause.title, lang())) + '</h1>' +
       (text ? '<p class="lead" style="margin-top:.8rem">' + escapeHtml(text) + '</p>' : '') +
       (more ? '<p class="fine" style="margin-top:1.1rem" data-i18n="pause.more"></p>' : '') +
