@@ -245,6 +245,7 @@ function projection(quiz) {
       id: round.id,
       title: round.title,
       blurb: round.blurb,
+      pause: round.pause,
       questions: round.questions.map((q) => {
         const out = {
           id: q.id,

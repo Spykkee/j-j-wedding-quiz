@@ -73,11 +73,15 @@ function roundMarkup(ctx, round, r) {
 
     '<div class="round__body">' +
       '<details style="margin-bottom:.8rem">' +
-        '<summary class="fine" style="cursor:pointer">Translations and intro text</summary>' +
+        '<summary class="fine" style="cursor:pointer">Translations, intro and the break after</summary>' +
         '<div style="margin-top:.6rem">' +
           langInputs('rtitle', round.title, { r: r }, 'Round name') +
-          '<div class="h-section" style="margin:.8rem 0 .4rem">Intro shown on the big screen</div>' +
+          '<div class="h-section" style="margin:.8rem 0 .4rem">Intro shown before the round</div>' +
           langInputs('rblurb', round.blurb, { r: r }, 'Optional intro', true) +
+          '<div class="h-section" style="margin:.8rem 0 .4rem">Break after the round\'s scores — ' +
+            'leave the title empty to skip it</div>' +
+          langInputs('ptitle', round.pause.title, { r: r }, 'e.g. Time for the cheese') +
+          langInputs('ptext', round.pause.text, { r: r }, 'What guests read meanwhile', true) +
         '</div>' +
       '</details>' +
 
@@ -288,6 +292,8 @@ function onInput(ctx, e) {
     case 'title': ctx.quiz.title[hit.lang] = v; break;
     case 'rtitle': if (hit.round) hit.round.title[hit.lang] = v; break;
     case 'rblurb': if (hit.round) hit.round.blurb[hit.lang] = v; break;
+    case 'ptitle': if (hit.round) hit.round.pause.title[hit.lang] = v; break;
+    case 'ptext': if (hit.round) hit.round.pause.text[hit.lang] = v; break;
     case 'prompt': if (hit.question) hit.question.prompt[hit.lang] = v; break;
     case 'image': if (hit.question) hit.question.image = v; break;
     case 'note': if (hit.question) hit.question.note = v; break;

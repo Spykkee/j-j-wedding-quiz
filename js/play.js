@@ -136,6 +136,7 @@ function paint() {
   if (!myTeam() || renameMode) return paintJoin();
   switch (phase()) {
     case 'ready':    return paintReady();
+    case 'pause':    return paintPause();
     case 'question': return paintQuestion();
     case 'reveal':   return paintReveal();
     case 'scores':   return paintScores();
@@ -327,6 +328,24 @@ function paintReady() {
       '<h1 class="h-display" style="margin-top:.5rem">' + escapeHtml(pick(round.title, lang())) + '</h1>' +
       (blurb ? '<p class="lead" style="margin-top:.8rem">' + escapeHtml(blurb) + '</p>' : '') +
       '<p class="fine" style="margin-top:1.1rem" data-i18n="play.waitNext"></p>' +
+    '</section>'
+  );
+}
+
+/* The break after a round — the next course arriving. After the last round
+   there is nothing to pick up again, so it says so only when there is. */
+function paintPause() {
+  const round = currentRound();
+  if (!round || !round.pause) return paintWaiting();
+  const text = pick(round.pause.text, lang());
+  const more = db.pub && db.pub.rounds.length > pos().r + 1;
+
+  show(app,
+    '<section class="panel" style="text-align:center">' +
+      '<div class="qmeta__round" data-i18n="pause.label"></div>' +
+      '<h1 class="h-display" style="margin-top:.5rem">' + escapeHtml(pick(round.pause.title, lang())) + '</h1>' +
+      (text ? '<p class="lead" style="margin-top:.8rem">' + escapeHtml(text) + '</p>' : '') +
+      (more ? '<p class="fine" style="margin-top:1.1rem" data-i18n="pause.more"></p>' : '') +
     '</section>'
   );
 }

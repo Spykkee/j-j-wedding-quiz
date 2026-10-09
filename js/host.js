@@ -104,6 +104,7 @@ function paint() {
     case 'scores':   return paintScores();
     case 'ended':    return paintEnded();
     case 'ready':    return paintReady();
+    case 'pause':    return paintPause();
     default:         return paintLobby();
   }
 }
@@ -160,6 +161,19 @@ function paintReady() {
       '<div class="getready__title">' + escapeHtml(pick(round && round.title, lang())) + '</div>' +
       (round && pick(round.blurb, lang())
         ? '<div class="getready__blurb">' + escapeHtml(pick(round.blurb, lang())) + '</div>'
+        : '') +
+    '</div>';
+}
+
+function paintPause() {
+  const round = currentRound();
+  const pause = (round && round.pause) || {};
+  stage.innerHTML =
+    '<div class="getready">' +
+      '<div class="getready__round" data-i18n="pause.label"></div>' +
+      '<div class="getready__title">' + escapeHtml(pick(pause.title, lang())) + '</div>' +
+      (pick(pause.text, lang())
+        ? '<div class="getready__blurb">' + escapeHtml(pick(pause.text, lang())) + '</div>'
         : '') +
     '</div>';
 }

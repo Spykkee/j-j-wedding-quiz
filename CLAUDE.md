@@ -48,7 +48,10 @@ rooms/<ROOM>/
   adjust/<uid>        manual +/- points admin only
 ```
 
-`phase` is one of `lobby | ready | question | reveal | scores | ended`.
+`phase` is one of `lobby | ready | question | reveal | scores | pause | ended`.
+`pause` is the break after a round (the next course), from the round's
+`pause: {title, text}`; it follows the round scores, or the final scores after
+the last round. A round with an empty pause title has no break.
 Scores are **always derived** (`computeScores`) from answers + adjust — there is
 no stored total, so re-judging can never leave a stale number.
 
@@ -96,8 +99,8 @@ JJQ_ADMIN_PW="…" node tests/live-rules.mjs            # re-prove the boundarie
 ```sh
 python -m http.server 8765
 # then open:
-#   http://localhost:8765/tests/game.html?offline=1    51 checks, admin + game loop
-#   http://localhost:8765/tests/guest.html?offline=1   40 checks, guest page
+#   http://localhost:8765/tests/game.html?offline=1    60 checks, admin + game loop
+#   http://localhost:8765/tests/guest.html?offline=1   43 checks, guest page
 node tests/live-rules.mjs                  # 31 checks, live rules (needs the pw)
 ```
 

@@ -4,6 +4,7 @@
    A quiz is plain JSON so it can be exported, edited by hand and re-imported:
 
      { title, rounds: [ { id, title:{en,fr,ko}, blurb:{...},
+                          pause: { title:{...}, text:{...} },  // break after it
                           questions: [ Question ] } ] }
 
      Question = {
@@ -84,6 +85,7 @@ export function newRound(n) {
     id: uid('r'),
     title: { en: 'Round ' + n, fr: 'Manche ' + n, ko: n + '라운드' },
     blurb: emptyI18n(),
+    pause: { title: emptyI18n(), text: emptyI18n() },
     questions: []
   };
 }
@@ -109,6 +111,10 @@ export function normaliseQuiz(raw) {
       id: (r && r.id) || uid('r'),
       title: fixI18n(r && r.title, 'Round ' + (i + 1)),
       blurb: fixI18n(r && r.blurb, ''),
+      pause: {
+        title: fixI18n(r && r.pause && r.pause.title, ''),
+        text: fixI18n(r && r.pause && r.pause.text, '')
+      },
       questions: []
     };
     const qs = (r && Array.isArray(r.questions)) ? r.questions : [];
@@ -144,6 +150,12 @@ export function normaliseQuiz(raw) {
   });
   if (!out.rounds.length) out.rounds.push(newRound(1));
   return out;
+}
+
+/* A round has a break after it (the next course, say) only if the break has a
+   title. */
+export function hasPause(round) {
+  return !!(round && round.pause && pick(round.pause.title, 'en'));
 }
 
 function fixI18n(v, fallback) {

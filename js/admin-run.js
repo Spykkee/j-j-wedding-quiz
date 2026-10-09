@@ -10,7 +10,7 @@
 import { PUBLIC_URL } from './config.js';
 import {
   questionAt, roundAt, nextPosition, prevPosition, answerKey, grade, pick,
-  computeScores, leaderboard, countQuestions
+  computeScores, leaderboard, countQuestions, hasPause
 } from './model.js';
 import { identity, escapeHtml, toast, ring, ringMarkup, TEAM_FLAGS } from './ui.js';
 
@@ -85,6 +85,7 @@ function consoleMarkup(ctx, s, round, question, r, q) {
       : '<div class="console__prompt console__prompt--none">' +
           (phase === 'lobby' ? 'Waiting in the lobby — guests can join.'
             : phase === 'ended' ? 'The quiz is finished.'
+            : phase === 'pause' && round ? 'Phones show: ' + escapeHtml(round.pause.title.en)
             : 'No question on screen.') +
         '</div>') +
 
@@ -102,6 +103,9 @@ function consoleMarkup(ctx, s, round, question, r, q) {
       '<button class="btn btn--ghost btn--sm" data-act="reveal">Reveal</button>' +
       '<button class="btn btn--ghost btn--sm" data-act="roundScores">Round scores</button>' +
       '<button class="btn btn--ghost btn--sm" data-act="finalScores">Final scores</button>' +
+      (hasPause(round)
+        ? '<button class="btn btn--ghost btn--sm" data-act="pause">Break</button>'
+        : '') +
       '<div class="spacer"></div>' +
       '<button class="btn btn--ghost btn--sm" data-act="lobby">Lobby</button>' +
       '<button class="btn btn--danger btn--sm" data-act="end">End quiz</button>' +
@@ -113,6 +117,7 @@ function phaseLabel(phase, s) {
   if (phase === 'question') return s.open ? 'Answering' : 'Closed';
   if (phase === 'scores') return (s.scope === 'final' ? 'Final scores' : 'Round scores');
   if (phase === 'ready') return 'Round intro';
+  if (phase === 'pause') return 'Break';
   if (phase === 'reveal') return 'Reveal';
   if (phase === 'ended') return 'Finished';
   return 'Lobby';
@@ -187,12 +192,22 @@ function primaryAction(ctx, s, round, r, q) {
       ? { act: 'roundScores', label: 'Show the round scores' }
       : { act: 'next', label: 'Next question' };
   }
+  /* The break after a round (the next course) follows its scores. After the
+     last round it follows the final scores instead, so dessert closes the
+     evening. */
+  const more = ctx.quiz.rounds.length > r + 1;
+  const pause = hasPause(round)
+    ? { act: 'pause', label: 'Show the break: ' + escapeHtml(round.pause.title.en) }
+    : null;
   if (phase === 'scores') {
-    if (s.scope === 'final') return { act: 'end', label: 'Finish the quiz' };
-    const more = ctx.quiz.rounds.length > r + 1;
+    if (s.scope === 'final') return pause || { act: 'end', label: 'Finish the quiz' };
+    if (!more) return { act: 'finalScores', label: 'Show the final scores' };
+    return pause || { act: 'nextRound', label: 'Start the next round' };
+  }
+  if (phase === 'pause') {
     return more
       ? { act: 'nextRound', label: 'Start the next round' }
-      : { act: 'finalScores', label: 'Show the final scores' };
+      : { act: 'end', label: 'Finish the quiz' };
   }
   return { act: 'lobby', label: 'Back to the lobby' };
 }
@@ -314,6 +329,7 @@ async function onRunClick(ctx, e) {
       case 'prev':       return goPrev(ctx);
       case 'roundScores': return showScores(ctx, 'round');
       case 'finalScores': return showScores(ctx, 'final');
+      case 'pause':      return showPause(ctx);
       case 'lobby':      return ctx.store.write('state', { phase: 'lobby', r: 0, q: 0, open: false });
       case 'end':        return endGame(ctx);
       case 'mark':       return markAnswer(ctx, node);
@@ -475,6 +491,13 @@ function showScores(ctx, scope) {
     q: Number(s.q) || 0,
     open: false,
     scope: scope
+  });
+}
+
+function showPause(ctx) {
+  const s = ctx.db.state || {};
+  return ctx.store.write('state', {
+    phase: 'pause', r: Number(s.r) || 0, q: Number(s.q) || 0, open: false
   });
 }
 

@@ -30,7 +30,8 @@ const me = await store.signInGuest();
 
 const quiz = normaliseQuiz({
   title: { en: 'Test quiz' },
-  rounds: [{ title: { en: 'Round one' }, blurb: { en: 'Just pick one.' }, questions: [
+  rounds: [{ title: { en: 'Round one' }, blurb: { en: 'Just pick one.' },
+    pause: { title: { en: 'Cheese time' }, text: { en: 'Try the stinky one.' } }, questions: [
     { type: 'mc', prompt: { en: 'Which wind blows through Provence?' }, points: 2, time: 0,
       options: [ { id: 'oa', text: { en: 'Sirocco' } }, { id: 'ob', text: { en: 'Mistral' } } ],
       correct: 'ob' },
@@ -46,7 +47,7 @@ const quiz = normaliseQuiz({
 await store.write('pub', {
   title: quiz.title,
   rounds: quiz.rounds.map((r) => ({
-    id: r.id, title: r.title, blurb: r.blurb,
+    id: r.id, title: r.title, blurb: r.blurb, pause: r.pause,
     questions: r.questions.map((q) => {
       const o = { id: q.id, type: q.type, prompt: q.prompt, image: '', points: q.points, time: q.time };
       if (q.type === 'mc') {
@@ -155,6 +156,13 @@ await store.write('state', { phase: 'reveal', r: 0, q: 0, open: false,
   reveal: { kind: 'mc', optionId: 'ob', text: 'Mistral' } });
 await settle();
 ok('an unneeded hidden option stays hidden at the reveal', !/Secret/.test(app.textContent));
+
+/* the break after the round */
+await store.write('state', { phase: 'pause', r: 0, q: 2, open: false });
+await settle();
+ok('break shows its title', /Cheese time/.test(app.textContent), app.textContent.slice(0, 120));
+ok('break shows its text', /Try the stinky one\./.test(app.textContent));
+ok('break after the last round does not promise more quiz', !/picks up again/.test(app.textContent));
 
 /* scores screen lists both tables */
 await store.write('state', { phase: 'scores', r: 0, q: 1, open: false, scope: 'final' });

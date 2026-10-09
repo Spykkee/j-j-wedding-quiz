@@ -216,6 +216,30 @@ await click('prev');
 ok('prev crosses back into round 1', ctx.db.state.r === 0 && ctx.db.state.q === 1,
    ctx.db.state.r + '/' + ctx.db.state.q);
 
+/* ---- a break (the next course) after a round's scores ----------------- */
+const primaryAct = () => { renderRun(ctx);
+  return ctx.panes.run.querySelector('.console__actions [data-act]').getAttribute('data-act'); };
+await store.write('state', { phase: 'scores', r: 0, q: 1, open: false, scope: 'round' });
+await tick();
+ok('no break set: scores lead straight to the next round', primaryAct() === 'nextRound', primaryAct());
+ctx.quiz.rounds[0].pause.title.en = 'Cheese';
+ctx.quiz.rounds[1].pause.title.en = 'Dessert';
+ok('with a break, round scores lead to it', primaryAct() === 'pause', primaryAct());
+await click('pause');
+ok('phase pause', ctx.db.state.phase === 'pause' && ctx.db.state.r === 0, JSON.stringify(ctx.db.state));
+ok('the break leads to the next round', primaryAct() === 'nextRound', primaryAct());
+await store.write('state', { phase: 'scores', r: 1, q: 0, open: false, scope: 'round' });
+await tick();
+ok('last round: scores still go to the final scores first', primaryAct() === 'finalScores', primaryAct());
+await store.write('state', { phase: 'scores', r: 1, q: 0, open: false, scope: 'final' });
+await tick();
+ok('final scores lead to the last break', primaryAct() === 'pause', primaryAct());
+await click('pause');
+ok('the last break leads to the finish', primaryAct() === 'end', primaryAct());
+ok('a break survives a save', normaliseQuiz(ctx.quiz).rounds[0].pause.title.en === 'Cheese');
+ctx.quiz.rounds[0].pause.title.en = '';
+ctx.quiz.rounds[1].pause.title.en = '';
+
 /* ---- the build pane renders and edits --------------------------------- */
 renderBuild(ctx);
 const prompts = ctx.panes.build.querySelectorAll('[data-act="prompt"][data-lang="en"]');
@@ -225,6 +249,10 @@ prompts[0].dispatchEvent(new Event('input', { bubbles: true }));
 ok('typing updates the model', ctx.quiz.rounds[0].questions[0].prompt.en === 'Edited prompt',
    ctx.quiz.rounds[0].questions[0].prompt.en);
 ok('typing marks it dirty', ctx.dirty === true);
+const ptitle = ctx.panes.build.querySelector('[data-act="ptitle"][data-r="0"][data-lang="fr"]');
+ptitle.value = 'Fromage';
+ptitle.dispatchEvent(new Event('input', { bubbles: true }));
+ok('the break title is editable', ctx.quiz.rounds[0].pause.title.fr === 'Fromage');
 
 const sneakBox = ctx.panes.build.querySelector('[data-act="hidden"][data-o="ob"]');
 ok('each option has a hidden toggle', !!sneakBox && sneakBox.checked === false);
