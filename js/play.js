@@ -114,6 +114,13 @@ function signature() {
     a ? (a.pts == null ? '' : a.pts) : '',
     db.pub ? 'q' : 'noq',
     lang(),
+    /* Round and final scores share a phase, and a late hand-mark or adjustment
+       changes the order, so the score screens also follow scope and totals. */
+    s.scope || '',
+    s.phase === 'scores' || s.phase === 'ended'
+      ? leaderboard(db.teams, computeScores(db.teams, db.answers, db.adjust))
+          .map((row) => row.id + ':' + row.score).join()
+      : '',
     myTeam() && !renameMode && phase() === 'lobby'
       ? Object.entries(db.teams).map(([id, tm]) => id + (tm && tm.name) + (tm && tm.emoji)).join()
       : ''
@@ -593,10 +600,11 @@ function paintScores() {
   show(app,
     '<section class="panel">' +
       '<div class="h-section">' + escapeHtml(t(final ? 'scores.final' : 'scores.round')) + '</div>' +
-      boardMarkup(rows) +
-      '<p class="fine" style="margin-top:1rem;text-align:center" data-i18n="play.waitNext"></p>' +
+      (final ? podiumMarkup(rows) : boardMarkup(rows)) +
+      (final ? '' : '<p class="fine" style="margin-top:1rem;text-align:center" data-i18n="play.waitNext"></p>') +
     '</section>'
   );
+  if (final && rows.some((row) => row.id === me && row.place <= 3)) confetti({ count: 110 });
 }
 
 function paintEnded() {
@@ -611,11 +619,40 @@ function paintEnded() {
           '<p class="lead" style="margin-top:.3rem">' + escapeHtml(points(winner.score)) + '</p>'
         : '') +
       '<hr class="divider">' +
-      '<div style="text-align:left">' + boardMarkup(rows) + '</div>' +
+      podiumMarkup(rows) +
       '<p class="lead" style="margin-top:1.2rem" data-i18n="end.thanks"></p>' +
     '</section>'
   );
   if (winner && winner.id === me) confetti({ count: 140 });
+}
+
+/* The final result is a podium, not a ranking: only the top three places are
+   named, and every other table still sees its own place in the standing bar.
+   Tied tables share a step. */
+function podiumMarkup(rows) {
+  if (!rows.length) return '<div class="empty" data-i18n="host.waiting"></div>';
+  const steps = [];
+  rows.filter((row) => row.place <= 3).forEach((row) => {
+    const last = steps[steps.length - 1];
+    if (last && last.place === row.place) last.rows.push(row);
+    else steps.push({ place: row.place, rows: [row] });
+  });
+  /* Second on the left, first in the middle, third on the right. */
+  const order = [steps[1], steps[0], steps[2]].filter(Boolean);
+  return '<div class="podium">' + order.map((step) => {
+    const rank = steps.indexOf(step) + 1;
+    return '<div class="podium__step podium__step--' + rank + '">' +
+      step.rows.map((row) => {
+        const id = identity(row.id, db.teams[row.id]);
+        return '<div class="podium__team' + (row.id === me ? ' is-you' : '') + '">' +
+          '<span class="podium__emoji">' + id.emoji + '</span>' +
+          '<span class="podium__name">' + escapeHtml(row.name) + '</span>' +
+          '<span class="podium__score">' + escapeHtml(points(row.score)) + '</span>' +
+        '</div>';
+      }).join('') +
+      '<div class="podium__block">' + step.place + '</div>' +
+    '</div>';
+  }).join('') + '</div>';
 }
 
 function boardMarkup(rows) {

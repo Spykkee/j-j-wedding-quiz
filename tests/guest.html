@@ -169,6 +169,25 @@ await store.write('state', { phase: 'scores', r: 0, q: 1, open: false, scope: 'f
 await settle();
 ok('scores list both teams', /Alpha/.test(app.textContent) && /Bravo/.test(app.textContent));
 
+/* with more tables, the final is a podium: top three places only, ties share */
+await store.write('teams/tc', { name: 'Charlie', at: 3 });
+await store.write('teams/td', { name: 'Delta', at: 4 });
+await store.write('teams/te', { name: 'Echo', at: 5 });
+await store.write('adjust', { tc: 5, td: 4, te: 3 });   // Alpha has 3 from the answers above
+await settle();
+ok('final shows a podium', !!app.querySelector('.podium'));
+ok('podium names the top three places, ties included',
+   ['Charlie', 'Delta', 'Alpha', 'Echo'].every((n) => app.textContent.includes(n)), app.textContent.slice(0, 160));
+ok('podium leaves out the rest', !/Bravo/.test(app.textContent));
+ok('tied tables share a step', app.querySelectorAll('.podium__step').length === 3 &&
+   app.querySelector('.podium__step--3').querySelectorAll('.podium__team').length === 2);
+await store.write('state', { phase: 'scores', r: 0, q: 1, open: false, scope: 'round' });
+await settle();
+ok('round scores still list everyone', /Bravo/.test(app.textContent) && !app.querySelector('.podium'));
+for (const id of ['tc', 'td', 'te']) await store.erase('teams/' + id);
+await store.erase('adjust');
+await settle();
+
 /* a fresh guest with no team gets the join form */
 await store.erase('teams/' + me);
 await settle();
