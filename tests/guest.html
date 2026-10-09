@@ -32,7 +32,7 @@ const quiz = normaliseQuiz({
   title: { en: 'Test quiz' },
   rounds: [{ title: { en: 'Round one' }, blurb: { en: 'Just pick one.' },
     pause: { title: { en: 'Cheese time' }, text: { en: 'Try the stinky one.' },
-             image: 'img/pause-fromage.svg' }, questions: [
+             image: 'img/pause-fromage.jpg' }, questions: [
     { type: 'mc', prompt: { en: 'Which wind blows through Provence?' }, points: 2, time: 0,
       options: [ { id: 'oa', text: { en: 'Sirocco' } }, { id: 'ob', text: { en: 'Mistral' } } ],
       correct: 'ob' },
@@ -164,7 +164,7 @@ await settle();
 ok('break shows its title', /Cheese time/.test(app.textContent), app.textContent.slice(0, 120));
 ok('break shows its text', /Try the stinky one\./.test(app.textContent));
 ok('break shows its picture', (app.querySelector('.pause__image') || {}).getAttribute &&
-   app.querySelector('.pause__image').getAttribute('src') === 'img/pause-fromage.svg');
+   app.querySelector('.pause__image').getAttribute('src') === 'img/pause-fromage.jpg');
 ok('break after the last round does not promise more quiz', !/picks up again/.test(app.textContent));
 
 /* scores screen lists both tables */

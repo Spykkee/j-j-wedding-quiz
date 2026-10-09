@@ -85,7 +85,7 @@ function roundMarkup(ctx, round, r) {
           '<label class="field" style="margin-top:.4rem">' +
             '<span class="field__label">Picture (optional) — a URL, or a file in img/</span>' +
             '<input class="input input--sm" data-act="pimage" data-r="' + r + '" ' +
-              'value="' + escapeHtml(round.pause.image || '') + '" placeholder="img/pause-dessert.svg">' +
+              'value="' + escapeHtml(round.pause.image || '') + '" placeholder="img/pause-dessert.jpg">' +
           '</label>' +
         '</div>' +
       '</details>' +
